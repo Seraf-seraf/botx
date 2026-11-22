@@ -59,10 +59,6 @@
   --botx-font-heading: 700 28px / 38px Inter, system-ui, sans-serif;
   --botx-page-inline: clamp(15px, 5.65vw, 22px);
   --botx-max-width: 430px;
-  --botx-safe-top: env(safe-area-inset-top, 0px);
-  --botx-safe-right: env(safe-area-inset-right, 0px);
-  --botx-safe-bottom: env(safe-area-inset-bottom, 0px);
-  --botx-safe-left: env(safe-area-inset-left, 0px);
 }
 
 @media (prefers-contrast: more) {
@@ -72,4 +68,11 @@
     --botx-border: var(--botx-sub);
     --botx-on-accent: var(--botx-bg);
   }
+}
+
+[data-app-shell] {
+  --botx-safe-top: max(env(safe-area-inset-top, 0px), var(--botx-telegram-top, 0px));
+  --botx-safe-right: max(env(safe-area-inset-right, 0px), var(--botx-telegram-right, 0px));
+  --botx-safe-bottom: max(env(safe-area-inset-bottom, 0px), var(--botx-telegram-bottom, 0px));
+  --botx-safe-left: max(env(safe-area-inset-left, 0px), var(--botx-telegram-left, 0px));
 }
