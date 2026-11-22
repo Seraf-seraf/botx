@@ -1,3 +1,4 @@
+import {memo} from 'react';
 import type {ReactElement} from 'react';
 import {NavLink} from 'react-router-dom';
 import {Icon} from './Icon';
@@ -10,7 +11,7 @@ export const tabs = [
   {path: '/profile', label: 'Профиль', icon: 'user-circle'},
 ] as const;
 
-export function BottomNav(): ReactElement {
+export const BottomNav = memo(function BottomNav(): ReactElement {
   return (
     <nav className={styles.navigation} aria-label="Разделы BOTX">
       {tabs.map(({path, label, icon}) => (
@@ -21,4 +22,4 @@ export function BottomNav(): ReactElement {
       ))}
     </nav>
   );
-}
+});

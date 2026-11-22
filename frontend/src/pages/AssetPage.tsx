@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useLayoutEffect, useRef, useState} from 'react';
 import type {ReactElement} from 'react';
 import {useLocation, useNavigate} from 'react-router-dom';
 import {historySince, PriceChart} from '../features/market/PriceChart';
@@ -36,6 +36,9 @@ interface AssetProps {
 
 export function AssetPage({quote, snapshot, side, onBack, onTrade}: AssetProps): ReactElement {
   const [range, setRange] = useState<Range>('week');
+  const previousSide = useRef(side);
+  const buyButton = useRef<HTMLButtonElement>(null);
+  const sellButton = useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const held = snapshot.holdings[quote.symbol]?.quantity ?? 0;
@@ -46,6 +49,15 @@ export function AssetPage({quote, snapshot, side, onBack, onTrade}: AssetProps):
   const tone = change >= 0 ? 'positive' : 'negative';
   const axis = range === 'hour' || range === 'day' ? timeAxis : dateAxis;
   const period = range === 'hour' ? 'час' : range === 'day' ? '24 часа' : range === 'week' ? '7 дней' : '30 дней';
+
+  useLayoutEffect(() => {
+    const closedSide = previousSide.current;
+    previousSide.current = side;
+    if (!side && closedSide) {
+      const trigger = closedSide === 'buy' ? buyButton.current : sellButton.current;
+      trigger?.focus();
+    }
+  }, [side]);
 
   function openTrade(next: TradeSide): void {
     void navigate(`/asset/${quote.symbol}/${next}`, {state: {from: 'asset'}});
@@ -87,8 +99,8 @@ export function AssetPage({quote, snapshot, side, onBack, onTrade}: AssetProps):
             <div><strong>{held} шт.</strong><strong>{formatBc(held * quote.price)}</strong></div>
           </Card>
           <div className={styles.actions}>
-            <Button onClick={() => openTrade('buy')}>Купить</Button>
-            <Button variant="secondary" onClick={() => openTrade('sell')}>Продать</Button>
+            <Button ref={buyButton} onClick={() => openTrade('buy')}>Купить</Button>
+            <Button ref={sellButton} variant="secondary" onClick={() => openTrade('sell')}>Продать</Button>
           </div>
           <p className={styles.disclaimer}>Виртуальный рынок · демо</p>
         </>

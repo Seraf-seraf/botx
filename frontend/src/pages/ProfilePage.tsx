@@ -1,4 +1,4 @@
-import {useId, useState} from 'react';
+import {memo, useId, useState} from 'react';
 import type {ReactElement} from 'react';
 import {useTelegram} from '../shared/telegram/useTelegram';
 import {Button} from '../shared/ui/Button';
@@ -19,7 +19,7 @@ const menu = [
   {title: 'Настройки', icon: 'settings', text: 'Данные игры сохраняются на этом устройстве.'},
 ] as const;
 
-export function ProfilePage(): ReactElement {
+export const ProfilePage = memo(function ProfilePage(): ReactElement {
   const {state: {profile}} = useTelegram();
   const [avatarFailed, setAvatarFailed] = useState(false);
   const [info, setInfo] = useState<{title: string; text: string} | null>(null);
@@ -87,4 +87,4 @@ export function ProfilePage(): ReactElement {
       )}
     </div>
   );
-}
+});

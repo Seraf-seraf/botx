@@ -1,8 +1,9 @@
-import type {ButtonHTMLAttributes, ReactElement} from 'react';
+import type {ButtonHTMLAttributes, ReactElement, Ref} from 'react';
 import {Icon} from './Icon';
 import styles from './ui.module.css';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  ref?: Ref<HTMLButtonElement>;
   variant?: 'primary' | 'secondary';
   busy?: boolean;
 }
