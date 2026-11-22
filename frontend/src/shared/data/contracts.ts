@@ -1,5 +1,6 @@
 export type Symbol = 'QST' | 'DICE' | 'MUSE' | 'NEKO';
 export type TradeSide = 'buy' | 'sell';
+export const MAX_TRADE_QUANTITY = 999;
 
 // Monetary values are integer hundredths of a BC.
 export interface PricePoint {
@@ -53,7 +54,7 @@ export type OperationResult =
 export interface AppDataSource {
   getSnapshot(): AppSnapshot;
   subscribe(listener: () => void): () => void;
-  buy(order: TradeOrder): OperationResult;
-  sell(order: TradeOrder): OperationResult;
-  claimBonus(): OperationResult;
+  buy(order: TradeOrder): Promise<OperationResult>;
+  sell(order: TradeOrder): Promise<OperationResult>;
+  claimBonus(): Promise<OperationResult>;
 }

@@ -1,5 +1,6 @@
-import {useState} from 'react';
-import type {AppSnapshot, OperationResult, PricePoint, Quote, TradeOrder, TradeSide} from './contracts';
+import type {AppSnapshot, PricePoint, Quote} from './contracts';
+import {useAppSnapshot} from './useAppSnapshot';
+import type {DemoData} from './useAppSnapshot';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const MARKET_DEPTH_DAYS = 30;
@@ -60,23 +61,6 @@ export function createDemoFixtures(now: number): AppSnapshot {
   };
 }
 
-const demoFixtures = createDemoFixtures(Date.now());
-
-export interface DemoData {
-  readonly snapshot: AppSnapshot;
-  trade(side: TradeSide, order: TradeOrder): OperationResult;
-  claimBonus(): void;
-}
-
 export function useDemoData(): DemoData {
-  const [bonusClaimed, setBonusClaimed] = useState(false);
-  return {
-    snapshot: {
-      ...demoFixtures,
-      bonusClaimed,
-      balance: demoFixtures.balance + (bonusClaimed ? 10_000 : 0),
-    },
-    trade: () => ({ok: false, reason: 'invalid'}),
-    claimBonus: () => setBonusClaimed(true),
-  };
+  return useAppSnapshot(createDemoFixtures);
 }

@@ -14,6 +14,14 @@ const CHART_WIDTH = 340;
 const CHART_HEIGHT = 150;
 const EDGE = 4;
 
+export function historySince(history: readonly PricePoint[], durationMs: number): readonly PricePoint[] {
+  const latest = history.at(-1);
+  if (!latest) return history;
+  const cutoff = latest.at - durationMs;
+  const index = history.findIndex(({at}) => at >= cutoff);
+  return history.slice(Math.max(0, history[index]?.at === cutoff ? index : index - 1));
+}
+
 function calculateLine(points: readonly PricePoint[]): readonly (readonly [number, number])[] {
   if (points.length === 0) return [];
   const prices = points.map(({price}) => price);

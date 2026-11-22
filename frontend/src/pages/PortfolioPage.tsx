@@ -1,7 +1,7 @@
 import {useState} from 'react';
 import type {ReactElement} from 'react';
 import {Link} from 'react-router-dom';
-import {PriceChart} from '../features/market/PriceChart';
+import {historySince, PriceChart} from '../features/market/PriceChart';
 import type {AppSnapshot} from '../shared/data/contracts';
 import {Badge} from '../shared/ui/Badge';
 import {Card} from '../shared/ui/Card';
@@ -16,6 +16,8 @@ const segments = [
   {value: 'history', label: 'История'},
 ] as const;
 
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
 type Segment = (typeof segments)[number]['value'];
 
 export function PortfolioPage({snapshot}: {snapshot: AppSnapshot}): ReactElement {
@@ -28,7 +30,7 @@ export function PortfolioPage({snapshot}: {snapshot: AppSnapshot}): ReactElement
   const cost = positions.reduce((sum, position) => sum + position.holding.cost, 0);
   const profit = value - cost;
   const tone = profit >= 0 ? 'positive' : 'negative';
-  const prices = positions[0]?.quote.history.slice(-85) ?? [];
+  const prices = historySince(positions[0]?.quote.history ?? [], WEEK_MS);
   const curve = prices.map(({at}, index) => ({
     at,
     price: positions.reduce((sum, {quote, holding}) => sum +

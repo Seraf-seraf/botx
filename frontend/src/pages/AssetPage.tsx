@@ -1,9 +1,9 @@
 import {useState} from 'react';
 import type {ReactElement} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {PriceChart} from '../features/market/PriceChart';
+import {historySince, PriceChart} from '../features/market/PriceChart';
 import {TradeSheet} from '../features/trading/TradeSheet';
-import type {AppSnapshot, OperationResult, PricePoint, Quote, TradeOrder, TradeSide} from '../shared/data/contracts';
+import type {AppSnapshot, OperationResult, Quote, TradeOrder, TradeSide} from '../shared/data/contracts';
 import {Badge} from '../shared/ui/Badge';
 import {Button} from '../shared/ui/Button';
 import {Card} from '../shared/ui/Card';
@@ -26,20 +26,12 @@ type Range = (typeof ranges)[number]['value'];
 const dateAxis = new Intl.DateTimeFormat('ru-RU', {day: 'numeric', month: 'short'});
 const timeAxis = new Intl.DateTimeFormat('ru-RU', {hour: '2-digit', minute: '2-digit'});
 
-function selectPoints(history: readonly PricePoint[], duration: number): readonly PricePoint[] {
-  const latest = history.at(-1);
-  if (!latest) return history;
-  const startAt = latest.at - duration;
-  const index = history.findIndex(({at}) => at >= startAt);
-  return history.slice(Math.max(0, history[index]?.at === startAt ? index : index - 1));
-}
-
 interface AssetProps {
   quote: Quote;
   snapshot: AppSnapshot;
   side?: TradeSide;
   onBack: () => void;
-  onTrade: (side: TradeSide, order: TradeOrder) => OperationResult;
+  onTrade: (side: TradeSide, order: TradeOrder) => Promise<OperationResult>;
 }
 
 export function AssetPage({quote, snapshot, side, onBack, onTrade}: AssetProps): ReactElement {
@@ -48,7 +40,7 @@ export function AssetPage({quote, snapshot, side, onBack, onTrade}: AssetProps):
   const navigate = useNavigate();
   const held = snapshot.holdings[quote.symbol]?.quantity ?? 0;
   const duration = ranges.find(({value}) => value === range)?.ms ?? 7 * DAY_MS;
-  const points = selectPoints(quote.history, duration);
+  const points = historySince(quote.history, duration);
   const lastAt = points.at(-1)?.at;
   const change = changePercent(quote.price, range === 'week' ? quote.priorPrice : points[0]?.price ?? quote.price);
   const tone = change >= 0 ? 'positive' : 'negative';
@@ -110,9 +102,9 @@ export function AssetPage({quote, snapshot, side, onBack, onTrade}: AssetProps):
           balance={snapshot.balance}
           held={held}
           onClose={onBack}
-          onConfirm={(quantity, price) => {
-            const result = onTrade(side, {id: crypto.randomUUID(), symbol: quote.symbol, quantity, unitPrice: price});
-            if (!result.ok) setFeedback('Операции будут доступны после подключения деморынка.');
+          onConfirm={(quantity, price, id) => onTrade(side, {id, symbol: quote.symbol, quantity, unitPrice: price})}
+          onSuccess={(operation) => {
+            setFeedback(`${operation.kind === 'buy' ? 'Покупка' : 'Продажа'} · ${formatBc(operation.amount)}`);
             onBack();
           }}
         />

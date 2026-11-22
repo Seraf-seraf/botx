@@ -1,7 +1,7 @@
 import {useState} from 'react';
 import type {ReactElement} from 'react';
 import {Link} from 'react-router-dom';
-import {PriceChart} from '../features/market/PriceChart';
+import {historySince, PriceChart} from '../features/market/PriceChart';
 import type {AppSnapshot, PricePoint, Quote} from '../shared/data/contracts';
 import {Badge} from '../shared/ui/Badge';
 import {Card} from '../shared/ui/Card';
@@ -21,7 +21,7 @@ const filters = [
 type Filter = (typeof filters)[number]['value'];
 const INDEX_BASE = 1284.6;
 const INDEX_OPEN_TOTAL = 83_000;
-const INDEX_DAY_POINTS = 13;
+const DAY_MS = 24 * 60 * 60 * 1000;
 const DAY_CHANGE_AT_OPEN = 2.8;
 
 function matchesFilter(quote: Quote, filter: Filter): boolean {
@@ -35,7 +35,7 @@ function matchesFilter(quote: Quote, filter: Filter): boolean {
 
 function indexPoints(quotes: readonly Quote[]): PricePoint[] {
   const first = quotes[0]?.history ?? [];
-  return first.slice(-INDEX_DAY_POINTS).map(({at}, index, window) => ({
+  return historySince(first, DAY_MS).map(({at}, index, window) => ({
     at,
     price: quotes.reduce((sum, quote) => sum + (
       quote.history.at(index - window.length)?.price ?? quote.price
