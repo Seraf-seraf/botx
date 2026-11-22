@@ -1,6 +1,8 @@
-import {useState} from 'react';
+import {useId, useState} from 'react';
 import type {ReactElement} from 'react';
 import {useTelegram} from '../shared/telegram/useTelegram';
+import {Button} from '../shared/ui/Button';
+import {Sheet} from '../shared/ui/Sheet';
 import {Card} from '../shared/ui/Card';
 import {Icon} from '../shared/ui/Icon';
 import styles from './Pages.module.css';
@@ -20,7 +22,8 @@ const menu = [
 export function ProfilePage(): ReactElement {
   const {state: {profile}} = useTelegram();
   const [avatarFailed, setAvatarFailed] = useState(false);
-  const [info, setInfo] = useState('');
+  const [info, setInfo] = useState<{title: string; text: string} | null>(null);
+  const headingId = useId();
   const name = profile.name ?? '@username';
 
   return (
@@ -54,7 +57,7 @@ export function ProfilePage(): ReactElement {
         <ul className={styles.achievements}>
           {achievements.map(({title, icon, text}) => (
             <li key={icon}>
-              <button type="button" onClick={() => setInfo(text)}>
+              <button type="button" onClick={() => setInfo({title, text})}>
                 <span><Icon name={icon} /></span>
                 {title}
               </button>
@@ -65,7 +68,7 @@ export function ProfilePage(): ReactElement {
       <ul className={styles.profileMenu}>
         {menu.map(({title, icon, text}) => (
           <li key={icon}>
-            <button type="button" onClick={() => setInfo(text)}>
+            <button type="button" onClick={() => setInfo({title, text})}>
               <Icon name={icon} size={20} />
               {title}
               <Icon name="chevron-right" size={18} />
@@ -73,7 +76,15 @@ export function ProfilePage(): ReactElement {
           </li>
         ))}
       </ul>
-      {info && <p role="status" className={styles.empty}>{info}</p>}
+      {info && (
+        <Sheet headingId={headingId} onClose={() => setInfo(null)}>
+          <div className={styles.profileInfo}>
+            <h2 id={headingId}>{info.title}</h2>
+            <p>{info.text}</p>
+            <Button onClick={() => setInfo(null)}>Закрыть</Button>
+          </div>
+        </Sheet>
+      )}
     </div>
   );
 }

@@ -1,10 +1,12 @@
 import type {ReactElement} from 'react';
 import {Link} from 'react-router-dom';
-import {PriceChart} from '../../features/market/PriceChart';
+import {historySince, PriceChart} from '../../features/market/PriceChart';
 import type {Quote} from '../data/contracts';
 import {Icon} from './Icon';
 import {changePercent, formatBc, signedPercent} from './market';
 import styles from './QuoteRow.module.css';
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 export function AssetIcon({quote}: {quote: Quote}): ReactElement {
   return (
@@ -37,7 +39,7 @@ export function QuoteRow({
             <span className={styles.caption}>{subtitle}</span>
           </div>
         </div>
-        {spark && <PriceChart variant="spark" tone={tone} points={quote.history.slice(-85)} />}
+        {spark && <PriceChart variant="spark" tone={tone} points={historySince(quote.history, WEEK_MS)} />}
         <div className={styles.value}>
           <span className={styles.amount}>{formatBc(amount)}</span>
           <span className={styles[tone]}>{signedPercent(change)}</span>

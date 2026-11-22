@@ -7,13 +7,49 @@
   max-block-size: min(100%, var(--botx-viewport, 100dvh));
   margin: 0 auto;
   border: 0;
-  border-radius: var(--botx-radius-24) var(--botx-radius-24) 0 0;
   padding: 0;
-  background: var(--botx-surface);
+  background: transparent;
   color: var(--botx-text);
-  overscroll-behavior: contain;
+  overflow: visible;
 }
 
 .sheet::backdrop {
   background: rgb(11 16 32 / 60%);
+}
+
+.panel {
+  max-block-size: var(--botx-viewport, 100dvh);
+  overflow: auto;
+  overscroll-behavior: contain;
+  border-radius: var(--botx-radius-24) var(--botx-radius-24) 0 0;
+  background: var(--botx-surface);
+}
+
+.topBar {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--botx-space-8);
+  min-block-size: calc(62px + var(--botx-safe-top));
+  max-inline-size: var(--botx-max-width);
+  margin-inline: auto;
+  border-block-end: 1px solid var(--botx-border);
+  border-radius: var(--botx-radius-24) var(--botx-radius-24) 0 0;
+  padding-block-start: var(--botx-safe-top);
+  padding-inline: max(var(--botx-page-inline), var(--botx-safe-left)) max(var(--botx-page-inline), var(--botx-safe-right));
+  background: var(--botx-bg);
+  font: var(--botx-font-body-bold);
+}
+
+.topBar button {
+  display: grid;
+  place-items: center;
+  min-inline-size: 36px;
+  min-block-size: 44px;
+  margin-inline-start: -6px;
+  border: 0;
+  padding: 0;
+  background: none;
 }

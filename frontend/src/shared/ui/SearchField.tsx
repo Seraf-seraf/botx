@@ -1,15 +1,17 @@
 import {useRef} from 'react';
-import type {ReactElement} from 'react';
+import type {ReactElement, RefObject} from 'react';
 import {Icon} from './Icon';
 import styles from './ui.module.css';
 
 interface SearchProps {
   value: string;
   onChange: (value: string) => void;
+  inputRef?: RefObject<HTMLInputElement | null>;
 }
 
-export function SearchField({value, onChange}: SearchProps): ReactElement {
-  const input = useRef<HTMLInputElement>(null);
+export function SearchField({value, onChange, inputRef}: SearchProps): ReactElement {
+  const fallbackRef = useRef<HTMLInputElement>(null);
+  const input = inputRef ?? fallbackRef;
   return (
     <div role="search" className={styles.search}>
       <Icon name="search" size={22} />

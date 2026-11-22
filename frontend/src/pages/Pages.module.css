@@ -137,16 +137,16 @@
   font: var(--botx-font-caption-bold);
 }
 
-.bonus:disabled {
+.bonus[data-claimed='true'] {
+  background: var(--botx-surface);
+}
+
+.bonus[data-claimed='true'] .bonusIcon {
   background: var(--botx-greenbg);
+  color: var(--botx-green);
 }
 
-.bonus:disabled .bonusIcon {
-  background: var(--botx-green);
-  color: var(--botx-bg);
-}
-
-.bonus:disabled .bonusAction {
+.bonus[data-claimed='true'] .bonusAction {
   color: var(--botx-green);
 }
 
@@ -311,4 +311,43 @@
 
 .progressCard strong {
   font: inherit;
+}
+
+.marketState, .emptyPortfolio {
+  min-block-size: 100%;
+}
+
+.marketState[data-view='error'] {
+  grid-template-rows: auto 1fr;
+}
+
+.marketState[data-view='empty-search'], .emptyPortfolio {
+  grid-template-rows: auto auto 1fr;
+}
+
+.emptySummary {
+  min-block-size: 128px;
+  align-content: start;
+}
+
+.emptyAction {
+  display: grid;
+  place-items: center;
+  inline-size: 100%;
+  min-block-size: 52px;
+  border-radius: var(--botx-radius-10);
+  background: var(--botx-accent);
+  color: var(--botx-on-accent);
+  font: 600 16px / 22px Inter, system-ui, sans-serif;
+  text-decoration: none;
+}
+
+.profileInfo {
+  display: grid;
+  gap: var(--botx-space-16);
+  padding: var(--botx-space-24) max(var(--botx-page-inline), var(--botx-safe-right)) max(var(--botx-space-24), var(--botx-safe-bottom)) max(var(--botx-page-inline), var(--botx-safe-left));
+}
+
+.profileInfo p {
+  color: var(--botx-muted);
 }

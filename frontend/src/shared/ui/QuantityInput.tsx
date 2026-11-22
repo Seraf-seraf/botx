@@ -9,21 +9,24 @@ interface QuantityProps {
   value: number;
   max: number;
   disabled?: boolean;
+  errorId?: string;
   onChange: (value: number) => void;
 }
 
-export function QuantityInput({value, max, disabled, onChange}: QuantityProps): ReactElement {
+export function QuantityInput({value, max, disabled, errorId, onChange}: QuantityProps): ReactElement {
   const id = useId();
   return (
     <div className={styles.quantity}>
       <label htmlFor={id}>Количество</label>
-      <div className={styles.stepper}>
+      <div className={styles.stepper} data-invalid={Boolean(errorId)}>
         <button type="button" aria-label="Уменьшить количество" disabled={disabled || value <= MIN_QUANTITY} onClick={() => onChange(Math.max(MIN_QUANTITY, value - 1))}>
           <Icon name="minus" size={22} />
         </button>
         <input
           id={id}
           type="number"
+          aria-invalid={errorId ? true : undefined}
+          aria-describedby={errorId}
           min={MIN_QUANTITY}
           max={max}
           step={1}

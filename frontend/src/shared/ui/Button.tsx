@@ -1,4 +1,5 @@
 import type {ButtonHTMLAttributes, ReactElement} from 'react';
+import {Icon} from './Icon';
 import styles from './ui.module.css';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -17,7 +18,7 @@ export function Button({
       aria-busy={busy || undefined}
       className={`${styles.button} ${styles[variant]} ${className}`}
     >
-      {busy && <span aria-hidden="true" className={styles.spinner} />}
+      {busy && <span aria-hidden="true" className={styles.spinner}><Icon name="history" size={20} /></span>}
       {children}
     </button>
   );

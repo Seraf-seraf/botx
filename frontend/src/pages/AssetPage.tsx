@@ -1,6 +1,6 @@
 import {useState} from 'react';
 import type {ReactElement} from 'react';
-import {useNavigate} from 'react-router-dom';
+import {useLocation, useNavigate} from 'react-router-dom';
 import {historySince, PriceChart} from '../features/market/PriceChart';
 import {TradeSheet} from '../features/trading/TradeSheet';
 import type {AppSnapshot, OperationResult, Quote, TradeOrder, TradeSide} from '../shared/data/contracts';
@@ -36,8 +36,8 @@ interface AssetProps {
 
 export function AssetPage({quote, snapshot, side, onBack, onTrade}: AssetProps): ReactElement {
   const [range, setRange] = useState<Range>('week');
-  const [feedback, setFeedback] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
   const held = snapshot.holdings[quote.symbol]?.quantity ?? 0;
   const duration = ranges.find(({value}) => value === range)?.ms ?? 7 * DAY_MS;
   const points = historySince(quote.history, duration);
@@ -93,7 +93,6 @@ export function AssetPage({quote, snapshot, side, onBack, onTrade}: AssetProps):
           <p className={styles.disclaimer}>Виртуальный рынок · демо</p>
         </>
       )}
-      {feedback && <p role="status">{feedback}</p>}
       {side && (
         <TradeSheet
           key={side}
@@ -104,8 +103,10 @@ export function AssetPage({quote, snapshot, side, onBack, onTrade}: AssetProps):
           onClose={onBack}
           onConfirm={(quantity, price, id) => onTrade(side, {id, symbol: quote.symbol, quantity, unitPrice: price})}
           onSuccess={(operation) => {
-            setFeedback(`${operation.kind === 'buy' ? 'Покупка' : 'Продажа'} · ${formatBc(operation.amount)}`);
-            onBack();
+            void navigate(`/asset/${quote.symbol}/receipt?id=${encodeURIComponent(operation.id)}`, {
+              replace: true,
+              state: {from: location.state?.from},
+            });
           }}
         />
       )}

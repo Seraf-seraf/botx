@@ -2,6 +2,7 @@ import {useRef, useState} from 'react';
 import type {ReactElement} from 'react';
 import type {AppSnapshot, OperationResult} from '../shared/data/contracts';
 import {Card} from '../shared/ui/Card';
+import {Feedback} from '../shared/ui/Feedback';
 import {Icon} from '../shared/ui/Icon';
 import {OperationList} from '../shared/ui/OperationList';
 import {formatBc} from '../shared/ui/market';
@@ -41,15 +42,15 @@ export function BalancePage({snapshot, onBonus}: BalanceProps): ReactElement {
         <p className={styles.caption}>Виртуальные боткоины</p>
         <p className={styles.axisLabel}>Используются только внутри игры</p>
       </Card>
-      <button className={styles.bonus} type="button" onClick={() => { void handleBonus(); }} aria-busy={pending || undefined} disabled={snapshot.bonusClaimed || pending}>
+      <button className={styles.bonus} data-claimed={snapshot.bonusClaimed} type="button" onClick={() => { void handleBonus(); }} aria-busy={pending || undefined} disabled={snapshot.bonusClaimed || pending}>
         <span className={styles.bonusIcon}><Icon name={snapshot.bonusClaimed ? 'check' : 'gift'} /></span>
         <span className={styles.bonusBody}>
-          <strong>Ежедневный бонус</strong>
-          <span className={styles.bonusAction}>{snapshot.bonusClaimed ? 'Получено +100 BC' : 'Забрать +100 BC'}</span>
-          <span className={styles.tiny}>{snapshot.bonusClaimed ? 'Следующая награда завтра' : 'Новая награда каждый день'}</span>
+          <strong>{snapshot.bonusClaimed ? 'Бонус получен' : 'Ежедневный бонус'}</strong>
+          <span className={styles.bonusAction}>{snapshot.bonusClaimed ? 'Следующий бонус — завтра' : 'Забрать +100 BC'}</span>
+          <span className={styles.tiny}>{snapshot.bonusClaimed ? '+100 BC на балансе' : 'Новая награда каждый день'}</span>
         </span>
       </button>
-      {error && <p role="alert">{error}</p>}
+      {error && <Feedback title={error} />}
       <section className={styles.section} aria-labelledby="balance-operations">
         <h2 id="balance-operations">История операций</h2>
         <OperationList operations={snapshot.operations} />

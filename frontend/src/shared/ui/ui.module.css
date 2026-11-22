@@ -43,12 +43,13 @@
   color: var(--botx-muted);
 }
 
+.primary[aria-busy='true'] {
+  background: var(--botx-accent);
+  color: var(--botx-on-accent);
+}
+
 .spinner {
-  inline-size: 16px;
-  block-size: 16px;
-  border: 2px solid currentColor;
-  border-inline-end-color: transparent;
-  border-radius: 50%;
+  display: inline-flex;
   animation: spin 800ms linear infinite;
 }
 
@@ -201,4 +202,12 @@
 .stepper input::-webkit-inner-spin-button,
 .stepper input::-webkit-outer-spin-button {
   appearance: none;
+}
+
+.stepper[data-invalid='true'] {
+  border-color: var(--botx-red);
+}
+
+.stepper input:disabled {
+  color: var(--botx-muted);
 }

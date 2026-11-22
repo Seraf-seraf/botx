@@ -1,5 +1,6 @@
 import type {ReactElement} from 'react';
 import {Navigate, Route, Routes, useLocation, useMatch, useNavigate} from 'react-router-dom';
+import {TradeReceipt} from '../features/trading/TradeReceipt';
 import {AssetPage} from '../pages/AssetPage';
 import {BalancePage} from '../pages/BalancePage';
 import {MarketPage} from '../pages/MarketPage';
@@ -17,9 +18,13 @@ export function AppRoutes(): ReactElement {
   const navigate = useNavigate();
   const location = useLocation();
   const from: unknown = location.state?.from;
+  const receiptId = new URLSearchParams(location.search).get('id');
+  const receipt = side === 'receipt' ? snapshot.operations.find((operation) =>
+    operation.id === receiptId && operation.symbol === asset?.symbol && operation.kind !== 'bonus',
+  ) : undefined;
 
   function back(): void {
-    if (tradeSide) {
+    if (tradeSide || receipt) {
       if (from === 'asset') void navigate(-1);
       else void navigate(`/asset/${asset?.symbol}`, {replace: true});
     } else if (from === '/' || from === '/portfolio') {
@@ -29,12 +34,15 @@ export function AppRoutes(): ReactElement {
     }
   }
 
-  const assetPage = asset && (!side || tradeSide)
-    ? <AssetPage key={asset.symbol} quote={asset} snapshot={snapshot} {...(tradeSide ? {side: tradeSide} : {})} onBack={back} onTrade={trade} />
-    : <Navigate to="/" replace />;
+  const assetPage = asset && receipt
+    ? <TradeReceipt operation={receipt} quote={asset} balance={snapshot.balance} />
+    : asset && (!side || tradeSide)
+      ? <AssetPage key={asset.symbol} quote={asset} snapshot={snapshot} {...(tradeSide ? {side: tradeSide} : {})} onBack={back} onTrade={trade} />
+      : <Navigate to="/" replace />;
 
+  const title = receipt ? (receipt.kind === 'buy' ? 'Покупка' : 'Продажа') : tradeSide ? asset?.name : 'Акция';
   return (
-    <AppShell {...(asset ? {title: tradeSide ? asset.name : 'Акция', onBack: back} : {})}>
+    <AppShell backInDialog={Boolean(tradeSide)} {...(asset ? {title: title ?? 'Акция', onBack: back} : {})}>
       <Routes>
         <Route path="/" element={<MarketPage snapshot={snapshot} />} />
         <Route path="/asset/:symbol/:side?" element={assetPage} />

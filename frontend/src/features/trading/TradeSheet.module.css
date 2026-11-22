@@ -68,3 +68,16 @@
   font: var(--botx-font-tiny);
   text-align: center;
 }
+
+.loss {
+  color: var(--botx-red);
+}
+
+.feedback {
+  display: grid;
+  gap: var(--botx-space-8);
+}
+
+.feedback:not(:empty) {
+  margin-block-start: var(--botx-space-16);
+}

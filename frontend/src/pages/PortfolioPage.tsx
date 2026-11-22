@@ -5,6 +5,7 @@ import {historySince, PriceChart} from '../features/market/PriceChart';
 import type {AppSnapshot} from '../shared/data/contracts';
 import {Badge} from '../shared/ui/Badge';
 import {Card} from '../shared/ui/Card';
+import {EmptyState} from '../shared/ui/EmptyState';
 import {FilterChips} from '../shared/ui/FilterChips';
 import {OperationList} from '../shared/ui/OperationList';
 import {QuoteRow} from '../shared/ui/QuoteRow';
@@ -38,9 +39,9 @@ export function PortfolioPage({snapshot}: {snapshot: AppSnapshot}): ReactElement
   }));
 
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} ${positions.length ? '' : styles.emptyPortfolio}`}>
       <h1>Портфель</h1>
-      <Card className={styles.portfolioSummary ?? ''}>
+      <Card className={`${styles.portfolioSummary} ${positions.length ? '' : styles.emptySummary}`}>
         <p className={styles.caption}>Стоимость активов</p>
         <strong className={styles.total}>{formatBc(value)}</strong>
         {positions.length > 0 && (
@@ -55,11 +56,15 @@ export function PortfolioPage({snapshot}: {snapshot: AppSnapshot}): ReactElement
           </>
         )}
       </Card>
+      {positions.length === 0 && segment === 'assets' ? (
+        <EmptyState icon="briefcase" title="Пока нет акций" description="Выберите первого бота на бирже">
+          <Link to="/" className={styles.emptyAction}>На биржу</Link>
+        </EmptyState>
+      ) : (
       <section className={styles.section} aria-labelledby="portfolio-holdings">
         <h2 id="portfolio-holdings">Мои акции</h2>
         <FilterChips label="Портфель" options={segments} value={segment} onChange={setSegment} />
-        {segment === 'history' ? <OperationList operations={snapshot.operations.filter(({kind}) => kind !== 'bonus')} /> :
-          positions.length ? (
+        {segment === 'history' ? <OperationList operations={snapshot.operations.filter(({kind}) => kind !== 'bonus')} /> : (
             <>
               <p className={styles.tiny}>{pluralCount(positions.length, ['актив', 'актива', 'активов'])} · изменение цены за 7 дней</p>
               <ul className={styles.quoteList}>
@@ -68,8 +73,9 @@ export function PortfolioPage({snapshot}: {snapshot: AppSnapshot}): ReactElement
                 ))}
               </ul>
             </>
-          ) : <p className={styles.empty}>Пока нет акций. <Link to="/">На биржу</Link></p>}
+          )}
       </section>
+      )}
     </div>
   );
 }

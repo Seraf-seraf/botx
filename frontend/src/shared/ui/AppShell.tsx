@@ -10,13 +10,14 @@ interface AppShellProps {
   children: ReactNode;
   title?: string;
   onBack?: () => void;
+  backInDialog?: boolean;
 }
 
-export function AppShell({children, title = 'BOTX', onBack}: AppShellProps): ReactElement {
+export function AppShell({children, title = 'BOTX', onBack, backInDialog = false}: AppShellProps): ReactElement {
   const {pathname} = useLocation();
   const main = useRef<HTMLElement>(null);
   const {state, visibleHeight} = useTelegram();
-  useTelegramBack(onBack);
+  useTelegramBack(backInDialog ? undefined : onBack);
   const {insets, stableHeight} = state;
   const height = Math.min(stableHeight ?? Infinity, visibleHeight ?? Infinity);
   const viewportStyle = {
@@ -33,8 +34,8 @@ export function AppShell({children, title = 'BOTX', onBack}: AppShellProps): Rea
 
   return (
     <div className={styles.shell} style={viewportStyle} data-app-shell="" data-telegram-theme={state.theme}>
-      <header className={styles.header}>
-        {onBack && (
+      <header className={styles.header} aria-hidden={backInDialog || undefined}>
+        {onBack && !backInDialog && (
           <button type="button" className={styles.back} aria-label="Назад" onClick={onBack}>
             <Icon name="arrow-left" size={20} />
           </button>
