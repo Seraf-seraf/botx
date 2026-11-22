@@ -1,0 +1,80 @@
+.shell {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  block-size: var(--botx-viewport, 100dvh);
+  max-inline-size: var(--botx-max-width);
+  margin-inline: auto;
+  overflow: hidden;
+  background: var(--botx-bg);
+  border-radius: var(--botx-radius-24);
+  outline: 1px solid var(--botx-border);
+  outline-offset: -1px;
+  isolation: isolate;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--botx-space-8);
+  min-block-size: calc(62px + var(--botx-safe-top));
+  border-block-end: 1px solid var(--botx-border);
+  padding-block-start: var(--botx-safe-top);
+  padding-inline: max(var(--botx-page-inline), var(--botx-safe-left)) max(var(--botx-page-inline), var(--botx-safe-right));
+  font: var(--botx-font-body-bold);
+}
+
+.back {
+  display: grid;
+  place-items: center;
+  min-inline-size: 36px;
+  min-block-size: 44px;
+  margin-inline-start: -6px;
+  border: 0;
+  padding: 0;
+  background: none;
+}
+
+.main {
+  min-inline-size: 0;
+  overflow: auto;
+  overscroll-behavior-y: contain;
+  padding: var(--botx-space-22) max(var(--botx-page-inline), var(--botx-safe-right)) var(--botx-space-24) max(var(--botx-page-inline), var(--botx-safe-left));
+  scrollbar-width: thin;
+}
+
+.navigation {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 0 var(--botx-safe-right) var(--botx-safe-bottom) var(--botx-safe-left);
+  border-block-start: 1px solid var(--botx-border);
+  background: var(--botx-bg);
+}
+
+.navLink {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: var(--botx-space-4);
+  min-block-size: 79px;
+  padding-block-end: var(--botx-space-12);
+  color: var(--botx-muted2);
+  font: 500 11px / 15px Inter, system-ui, sans-serif;
+  text-decoration: none;
+}
+
+.navLink[aria-current='page'] {
+  color: var(--botx-accent);
+}
+
+.navLink:focus-visible {
+  outline-offset: -4px;
+}
+
+@media (max-height: 540px) {
+  .navLink {
+    min-block-size: 52px;
+    padding-block-end: 0;
+  }
+}

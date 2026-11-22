@@ -1,0 +1,75 @@
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('../assets/fonts/inter-cyrillic-wght-normal.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('../assets/fonts/inter-latin-wght-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  --botx-bg: #0b1020;
+  --botx-surface: #151d2c;
+  --botx-surface2: #111827;
+  --botx-border: #283449;
+  --botx-line: #344258;
+  --botx-text: #f4f6fa;
+  --botx-sub: #c7d1e2;
+  --botx-muted: #8f9cb2;
+  --botx-muted2: #64738b;
+  --botx-accent: #5e90ff;
+  --botx-pressed: #4976d9;
+  --botx-bluebg: #1d3154;
+  --botx-green: #71e7b0;
+  --botx-greenbg: #133b37;
+  --botx-red: #ff7d91;
+  --botx-redbg: #402331;
+  --botx-white: #fff;
+  --botx-on-accent: var(--botx-white);
+  --botx-space-4: 4px;
+  --botx-space-8: 8px;
+  --botx-space-12: 12px;
+  --botx-space-16: 16px;
+  --botx-space-20: 20px;
+  --botx-space-22: 22px;
+  --botx-space-24: 24px;
+  --botx-space-32: 32px;
+  --botx-space-48: 48px;
+  --botx-radius-8: 8px;
+  --botx-radius-10: 10px;
+  --botx-radius-12: 12px;
+  --botx-radius-14: 14px;
+  --botx-radius-24: 24px;
+  --botx-radius-999: 999px;
+  --botx-font-body: 400 15px / 20px Inter, system-ui, sans-serif;
+  --botx-font-body-bold: 600 15px / 20px Inter, system-ui, sans-serif;
+  --botx-font-caption: 400 13px / 18px Inter, system-ui, sans-serif;
+  --botx-font-caption-bold: 600 13px / 18px Inter, system-ui, sans-serif;
+  --botx-font-tiny: 400 11px / 15px Inter, system-ui, sans-serif;
+  --botx-font-section: 600 18px / 24px Inter, system-ui, sans-serif;
+  --botx-font-heading: 700 28px / 38px Inter, system-ui, sans-serif;
+  --botx-page-inline: clamp(15px, 5.65vw, 22px);
+  --botx-max-width: 430px;
+  --botx-safe-top: env(safe-area-inset-top, 0px);
+  --botx-safe-right: env(safe-area-inset-right, 0px);
+  --botx-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --botx-safe-left: env(safe-area-inset-left, 0px);
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --botx-muted: var(--botx-text);
+    --botx-muted2: var(--botx-sub);
+    --botx-border: var(--botx-sub);
+    --botx-on-accent: var(--botx-bg);
+  }
+}

@@ -1,20 +1,17 @@
 import type {ReactElement} from 'react';
 import {Navigate, Route, Routes} from 'react-router-dom';
-
-export const tabs = [
-  {path: '/', label: 'Биржа', icon: 'chart-line'},
-  {path: '/portfolio', label: 'Портфель', icon: 'briefcase'},
-  {path: '/balance', label: 'Баланс', icon: 'wallet'},
-  {path: '/profile', label: 'Профиль', icon: 'user-circle'},
-] as const;
+import {AppShell} from '../shared/ui/AppShell';
+import {tabs} from '../shared/ui/BottomNav';
 
 export function AppRoutes(): ReactElement {
   return (
-    <Routes>
-      {tabs.map(({path, label}) => (
-        <Route key={path} path={path} element={<main><h1>{label}</h1></main>} />
-      ))}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <AppShell>
+      <Routes>
+        {tabs.map(({path, label}) => (
+          <Route key={path} path={path} element={<h1>{label}</h1>} />
+        ))}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </AppShell>
   );
 }

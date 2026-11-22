@@ -1,0 +1,204 @@
+.icon {
+  display: inline-block;
+  flex: 0 0 auto;
+  inline-size: var(--icon-size);
+  block-size: var(--icon-size);
+  background-color: currentColor;
+  mask: var(--icon-url) center / contain no-repeat;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--botx-space-8);
+  min-block-size: 52px;
+  border: 1px solid transparent;
+  border-radius: var(--botx-radius-10);
+  padding: 8px 12px;
+  font: 600 16px / 22px Inter, system-ui, sans-serif;
+  text-align: center;
+}
+
+.primary {
+  background: var(--botx-accent);
+  color: var(--botx-on-accent);
+}
+
+.primary:active:not(:disabled) {
+  background: var(--botx-pressed);
+}
+
+.secondary {
+  border-color: var(--botx-border);
+  background: var(--botx-surface);
+}
+
+.secondary:active:not(:disabled) {
+  background: var(--botx-bluebg);
+}
+
+.button:disabled {
+  background: var(--botx-border);
+  color: var(--botx-muted);
+}
+
+.spinner {
+  inline-size: 16px;
+  block-size: 16px;
+  border: 2px solid currentColor;
+  border-inline-end-color: transparent;
+  border-radius: 50%;
+  animation: spin 800ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 24px;
+  padding: 4px 8px;
+  border-radius: var(--botx-radius-8);
+  font: var(--botx-font-tiny);
+  white-space: nowrap;
+}
+
+.neutral {
+  background: var(--botx-surface);
+  color: var(--botx-text);
+}
+
+.positive {
+  background: var(--botx-greenbg);
+  color: var(--botx-green);
+}
+
+.negative {
+  background: var(--botx-redbg);
+  color: var(--botx-red);
+}
+
+.card {
+  min-inline-size: 0;
+  border: 1px solid var(--botx-border);
+  border-radius: var(--botx-radius-14);
+  padding: var(--botx-space-16);
+  background: var(--botx-surface);
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: var(--botx-space-12);
+  min-block-size: 46px;
+  padding-inline: var(--botx-space-12);
+  border: 1px solid var(--botx-border);
+  border-radius: var(--botx-radius-8);
+  background: var(--botx-surface);
+  color: var(--botx-muted);
+}
+
+.search:focus-within {
+  border-color: var(--botx-accent);
+}
+
+.search input {
+  flex: 1;
+  min-inline-size: 0;
+  min-block-size: 44px;
+  border: 0;
+  padding: 0;
+  color: var(--botx-text);
+  background: transparent;
+  outline: 0;
+  font: var(--botx-font-caption);
+}
+
+.search input::placeholder {
+  color: var(--botx-muted);
+}
+
+.search input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.search button, .stepper button {
+  display: grid;
+  place-items: center;
+  inline-size: 44px;
+  block-size: 44px;
+  border: 0;
+  background: none;
+}
+
+.search button {
+  margin-inline-end: -8px;
+}
+
+.chips {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: var(--botx-space-8);
+}
+
+.chips button {
+  min-block-size: 32px;
+  border: 1px solid var(--botx-border);
+  border-radius: var(--botx-radius-8);
+  padding: 4px;
+  background: var(--botx-surface);
+  color: var(--botx-muted);
+  font: var(--botx-font-caption-bold);
+}
+
+.chips button[aria-pressed='true'] {
+  border-color: transparent;
+  background: var(--botx-accent);
+  color: var(--botx-on-accent);
+}
+
+.quantity {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--botx-space-8);
+}
+
+.stepper {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) 48px;
+  align-items: center;
+  justify-items: center;
+  inline-size: min(164px, 58%);
+  min-block-size: 48px;
+  border: 1px solid var(--botx-border);
+  border-radius: var(--botx-radius-10);
+  background: var(--botx-surface2);
+}
+
+.stepper button:disabled {
+  color: var(--botx-muted2);
+}
+
+.stepper input {
+  inline-size: 100%;
+  min-inline-size: 0;
+  border: 0;
+  padding: 4px 0;
+  appearance: textfield;
+  color: var(--botx-text);
+  background: transparent;
+  text-align: center;
+  font: 700 20px / 24px Inter, system-ui, sans-serif;
+}
+
+.stepper input::-webkit-inner-spin-button,
+.stepper input::-webkit-outer-spin-button {
+  appearance: none;
+}
