@@ -1,0 +1,314 @@
+.market, .page, .section {
+  display: grid;
+  min-inline-size: 0;
+}
+
+.market, .section {
+  gap: var(--botx-space-12);
+}
+
+.page {
+  gap: var(--botx-space-20);
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--botx-space-8);
+}
+
+.balanceLink {
+  text-decoration: none;
+  border-radius: var(--botx-radius-8);
+}
+
+.marketIndex {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(90px, 42%);
+  align-items: center;
+  gap: var(--botx-space-12);
+  min-block-size: 116px;
+  border-radius: var(--botx-radius-8);
+}
+
+.indexValue {
+  display: grid;
+  gap: var(--botx-space-4);
+  font: var(--botx-font-caption-bold);
+}
+
+.indexValue strong {
+  font: var(--botx-font-heading);
+}
+
+.caption {
+  color: var(--botx-muted);
+  font: var(--botx-font-caption);
+}
+
+.tiny, .listCaption {
+  color: var(--botx-muted);
+  font: var(--botx-font-tiny);
+}
+
+.listCaption {
+  margin-block: 4px 3px;
+}
+
+.axisLabel {
+  color: var(--botx-muted2);
+  font: var(--botx-font-tiny);
+}
+
+.gain {
+  color: var(--botx-green);
+}
+
+.loss {
+  color: var(--botx-red);
+}
+
+.quoteList, .achievements, .profileMenu {
+  list-style: none;
+  padding: 0;
+}
+
+.total {
+  overflow-wrap: anywhere;
+  font: 700 32px / 42px Inter, system-ui, sans-serif;
+}
+
+.portfolioSummary, .balanceSummary {
+  display: grid;
+}
+
+.portfolioSummary {
+  gap: var(--botx-space-8);
+}
+
+.portfolioSummary .axisLabel {
+  margin-block-start: var(--botx-space-20);
+}
+
+.balanceSummary {
+  gap: var(--botx-space-16);
+}
+
+.balanceSummary .axisLabel {
+  border-block-start: 1px solid var(--botx-border);
+  padding-block-start: var(--botx-space-16);
+}
+
+.bonus {
+  display: flex;
+  align-items: center;
+  gap: var(--botx-space-12);
+  min-block-size: 108px;
+  border: 0;
+  border-radius: var(--botx-radius-10);
+  padding: var(--botx-space-16);
+  background: var(--botx-bluebg);
+  text-align: start;
+}
+
+.bonusIcon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  inline-size: 46px;
+  block-size: 46px;
+  border-radius: 50%;
+  background: var(--botx-accent);
+  color: var(--botx-on-accent);
+}
+
+.bonusBody {
+  display: grid;
+  gap: var(--botx-space-4);
+}
+
+.bonusBody strong {
+  font: var(--botx-font-body-bold);
+}
+
+.bonusAction {
+  color: var(--botx-accent);
+  font: var(--botx-font-caption-bold);
+}
+
+.bonus:disabled {
+  background: var(--botx-greenbg);
+}
+
+.bonus:disabled .bonusIcon {
+  background: var(--botx-green);
+  color: var(--botx-bg);
+}
+
+.bonus:disabled .bonusAction {
+  color: var(--botx-green);
+}
+
+.profile {
+  gap: var(--botx-space-16);
+}
+
+.profileIdentity {
+  display: flex;
+  align-items: center;
+  gap: var(--botx-space-12);
+  margin-block: 8px;
+}
+
+.profileName {
+  display: grid;
+  gap: var(--botx-space-4);
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.profileName strong {
+  font: 700 20px / 27px Inter, system-ui, sans-serif;
+}
+
+.avatar {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  inline-size: 64px;
+  block-size: 64px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--botx-bluebg);
+  font: var(--botx-font-heading);
+}
+
+.avatar img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+.progressCard {
+  display: grid;
+  gap: var(--botx-space-12);
+  border-radius: var(--botx-radius-8);
+  font: var(--botx-font-caption-bold);
+}
+
+.progressCard progress {
+  appearance: none;
+  inline-size: 100%;
+  block-size: 8px;
+  border: 0;
+  color: var(--botx-accent);
+  background: var(--botx-border);
+}
+
+.progressCard progress::-webkit-progress-bar {
+  background: var(--botx-border);
+}
+
+.progressCard progress::-webkit-progress-value {
+  background: var(--botx-accent);
+}
+
+.progressCard progress::-moz-progress-bar {
+  background: var(--botx-accent);
+}
+
+.statGrid, .achievements {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(8px, 2.8vw, 12px);
+}
+
+.statGrid > div, .achievements button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--botx-space-12);
+  min-block-size: 100px;
+  padding: 6px;
+  border: 1px solid var(--botx-border);
+  border-radius: var(--botx-radius-14);
+  background: var(--botx-surface);
+  color: var(--botx-muted);
+  text-align: center;
+  font: var(--botx-font-tiny);
+}
+
+.statGrid dd {
+  order: -1;
+  color: var(--botx-text);
+  font: 700 clamp(18px, 5.64vw, 22px) / 29px Inter, system-ui, sans-serif;
+}
+
+.statGrid dd.gain {
+  color: var(--botx-green);
+}
+
+.achievements button {
+  gap: var(--botx-space-16);
+  inline-size: 100%;
+  min-block-size: 114px;
+  color: var(--botx-sub);
+}
+
+.achievements button span:not([aria-hidden='true']) {
+  display: grid;
+  place-items: center;
+  inline-size: 42px;
+  block-size: 42px;
+  border-radius: 50%;
+  background: var(--botx-bluebg);
+  color: var(--botx-text);
+}
+
+.achievements li:nth-child(n+2) button span:not([aria-hidden='true']) {
+  color: var(--botx-accent);
+}
+
+.profileMenu li + li {
+  border-block-start: 1px solid var(--botx-border);
+}
+
+.profileMenu button {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--botx-space-12);
+  inline-size: 100%;
+  min-block-size: 46px;
+  border: 0;
+  padding: 0 4px 0 0;
+  background: none;
+  color: var(--botx-text);
+  text-align: start;
+  font: var(--botx-font-caption);
+}
+
+.profileMenu button span:last-child, .profileMenu li:nth-child(n+2) span {
+  color: var(--botx-muted);
+}
+
+.empty {
+  padding-block: var(--botx-space-16);
+  color: var(--botx-muted);
+  text-align: center;
+}
+
+.marketIndex svg {
+  block-size: 52px;
+  translate: 0 -5px;
+}
+
+.progressCard {
+  padding-block: 16px 12px;
+}
+
+.progressCard strong {
+  font: inherit;
+}

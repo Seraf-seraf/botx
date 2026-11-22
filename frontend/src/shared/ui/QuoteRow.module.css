@@ -1,0 +1,91 @@
+.row + .row {
+  border-block-start: 1px solid var(--botx-border);
+}
+
+.link {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--botx-space-8);
+  min-block-size: 70px;
+  text-decoration: none;
+}
+
+.link:has(svg) {
+  grid-template-columns: minmax(0, 1fr) auto minmax(71px, 0.63fr);
+  min-block-size: 78px;
+}
+
+.asset {
+  display: flex;
+  align-items: center;
+  min-inline-size: 0;
+  gap: var(--botx-space-12);
+}
+
+.assetIcon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  inline-size: 42px;
+  block-size: 42px;
+  border-radius: 50%;
+  color: var(--botx-accent);
+  background: var(--botx-bluebg);
+}
+
+.questIcon {
+  color: var(--botx-text);
+}
+
+.identity, .value {
+  display: grid;
+  min-inline-size: 0;
+  gap: var(--botx-space-4);
+}
+
+.name {
+  overflow-wrap: anywhere;
+  font: var(--botx-font-body-bold);
+}
+
+.caption, .value {
+  color: var(--botx-muted);
+  font: var(--botx-font-tiny);
+}
+
+.value {
+  justify-items: end;
+  text-align: end;
+}
+
+.amount {
+  color: var(--botx-text);
+  font: var(--botx-font-caption-bold);
+}
+
+.positive {
+  color: var(--botx-green);
+}
+
+.negative {
+  color: var(--botx-red);
+}
+
+.neutral {
+  color: var(--botx-muted);
+}
+
+@media (max-width: 359px) {
+  .link:has(svg) {
+    grid-template-columns: minmax(0, 1fr) 40px minmax(65px, 0.6fr);
+  }
+
+  .link svg {
+    inline-size: 40px;
+  }
+
+  .asset {
+    gap: var(--botx-space-8);
+  }
+}

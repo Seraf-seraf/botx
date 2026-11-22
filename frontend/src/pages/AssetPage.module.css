@@ -1,0 +1,91 @@
+.asset {
+  display: grid;
+  gap: var(--botx-space-16);
+  padding-block-start: 4px;
+  padding-block-end: var(--botx-safe-bottom);
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: var(--botx-space-12);
+}
+
+.icon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  inline-size: 52px;
+  block-size: 52px;
+  border-radius: 50%;
+  background: var(--botx-bluebg);
+  color: var(--botx-accent);
+}
+
+.identity h1 {
+  overflow-wrap: anywhere;
+  font: 700 20px / 27px Inter, system-ui, sans-serif;
+}
+
+.identity p, .change, .holdings p {
+  color: var(--botx-muted);
+  font: var(--botx-font-caption);
+}
+
+.identity p {
+  margin-block-start: 4px;
+}
+
+.price {
+  display: grid;
+  gap: var(--botx-space-8);
+  margin-block-start: var(--botx-space-8);
+}
+
+.price > strong {
+  overflow-wrap: anywhere;
+  font: 700 38px / 43px Inter, system-ui, sans-serif;
+}
+
+.change {
+  display: flex;
+  align-items: center;
+  gap: var(--botx-space-12);
+}
+
+.axis {
+  display: flex;
+  justify-content: space-between;
+  margin-block-start: 40px;
+  color: var(--botx-muted2);
+  font: var(--botx-font-tiny);
+}
+
+.holdings div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--botx-space-8);
+  margin-block-start: var(--botx-space-8);
+  font: var(--botx-font-section);
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--botx-space-12);
+}
+
+.disclaimer {
+  color: var(--botx-muted2);
+  text-align: center;
+  font: var(--botx-font-tiny);
+}
+
+.holdings strong {
+  font: inherit;
+}
+
+.asset .tradeChart {
+  block-size: 88px;
+  margin-block-start: 8px;
+}

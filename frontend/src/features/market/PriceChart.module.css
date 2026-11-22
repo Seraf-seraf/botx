@@ -1,0 +1,59 @@
+.chart {
+  display: block;
+  min-inline-size: 0;
+  inline-size: 100%;
+  overflow: visible;
+}
+
+.detail {
+  block-size: 148px;
+}
+
+.card {
+  block-size: 70px;
+}
+
+.spark {
+  inline-size: 56px;
+  block-size: 28px;
+}
+
+.positive {
+  color: var(--botx-green);
+}
+
+.negative {
+  color: var(--botx-red);
+}
+
+.neutral {
+  color: var(--botx-muted);
+}
+
+.grid {
+  fill: none;
+  stroke: var(--botx-border);
+  vector-effect: non-scaling-stroke;
+  opacity: 0.64;
+}
+
+.line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  transition: stroke 180ms ease;
+}
+
+.spark .line {
+  stroke-width: 1.6px;
+}
+
+.endpoint {
+  fill: currentColor;
+  stroke: currentColor;
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+}

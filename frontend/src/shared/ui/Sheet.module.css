@@ -1,0 +1,19 @@
+.sheet {
+  position: fixed;
+  inset-block: auto max(0px, calc(100dvh - var(--botx-viewport, 100dvh)));
+  inset-inline: 0;
+  inline-size: min(100%, var(--botx-max-width));
+  max-inline-size: 100%;
+  max-block-size: min(100%, var(--botx-viewport, 100dvh));
+  margin: 0 auto;
+  border: 0;
+  border-radius: var(--botx-radius-24) var(--botx-radius-24) 0 0;
+  padding: 0;
+  background: var(--botx-surface);
+  color: var(--botx-text);
+  overscroll-behavior: contain;
+}
+
+.sheet::backdrop {
+  background: rgb(11 16 32 / 60%);
+}
