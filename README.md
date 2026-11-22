@@ -32,3 +32,16 @@ npm run build
 ```
 
 Playwright проверяет сценарии покупки, продажи, бонуса, клавиатурной навигации, адаптивности и работу Telegram bridge с подменой SDK. Vite собирает статическое приложение в `frontend/dist/`.
+
+## Публикация
+
+Публичная версия 1 работает на Sites. Её статическая сборка получена из коммита `5a2cfe2cd477c5e084f8b32a66f3473c2f29b773`. Для новой версии соберите `frontend/dist/` из `frontend/` и опубликуйте его через Sites. Публикация запускается отдельно от push в GitHub. [Открыть BOTX](https://botx.s-e-r-a-f.chatgpt.site/)
+
+## Настройка Telegram Mini App
+
+1. В [@BotFather](https://t.me/BotFather) выполните `/newbot`. Укажите имя **BOTX** и свободный username, который заканчивается на `bot`. Храните токен приватно. Для frontend он не нужен.
+2. Откройте **/mybots → BOTX → Bot Settings → Configure Mini App → Enable Mini App**. Укажите URL `https://botx.s-e-r-a-f.chatgpt.site/`.
+3. Выполните `/setmenubutton`, выберите BOTX, укажите тот же HTTPS URL и подпись **Открыть биржу**. Та же настройка есть в **Bot Settings → Menu Button**.
+4. В **Edit Bot** добавьте описание и аватар. Откройте Mini App из профиля или меню бота в Telegram на телефоне и компьютере. Проверьте загрузку, кнопку «Назад», поля поиска и количества при открытой клавиатуре, отсутствие перекрытий и обновление котировок примерно через 12 секунд.
+
+Frontend открывается из меню бота. Ответы на `/start` и другие сообщения требуют серверного обработчика. [Документация Telegram Mini Apps](https://core.telegram.org/bots/webapps#launching-the-main-mini-app)
