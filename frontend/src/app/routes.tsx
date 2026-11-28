@@ -20,6 +20,7 @@ import {AppShell} from '../shared/ui/AppShell';
 export function AppRoutes({source}: {source: AppDataSource}): ReactElement {
   const {snapshot, trade, claimBonus, payService, cancelPayment, checkPayment} = useAppSnapshot(source);
   const [paymentPending, setPaymentPending] = useState(false);
+  const [paymentConfirmation, setPaymentConfirmation] = useState(false);
   const paymentMatch = useMatch('/payments/:requestId');
   const assetMatch = useMatch('/asset/:symbol/:side?');
   const portfolioAfter = useMatch('/portfolio/after');
@@ -84,14 +85,14 @@ export function AppRoutes({source}: {source: AppDataSource}): ReactElement {
 
   const title = receipt ? (receipt.kind === 'buy' ? 'Покупка' : 'Продажа') : tradeSide && !paused ? asset?.name : 'Акция';
   return (
-    <AppShell compactHeader={Boolean(adminFees && adminHeader.brand === 'Администрирование')} pausedAsset={Boolean(integrationApi || integrationMcp || adminList || adminReview || adminFees || paymentMatch || showTradePortfolio || receipt || paused && (!side || tradeSide))} backInDialog={Boolean(tradeSide && !paused)} {...(integrationApi || integrationMcp ? {...integrationHeader, onBack: back} : adminList ? {title: listingDecided ? 'Листинг' : 'BOTX', brand: listingDecided ? 'BOTX' : 'Администрирование', onBack: back} : adminReview || adminFees ? {...adminHeader, onBack: back} : paymentMatch ? {title: 'Оплата услуги', onBack: back} : showTradePortfolio ? {title: 'Портфель', onBack: back} : asset ? {title: title ?? 'Акция', onBack: back} : {})}>
+    <AppShell compactHeader={Boolean(adminFees && adminHeader.brand === 'Администрирование')} pausedAsset={Boolean(integrationApi || integrationMcp || adminList || adminReview || adminFees || paymentMatch || showTradePortfolio || receipt || paused && (!side || tradeSide))} backInDialog={Boolean(tradeSide && !paused || paymentMatch && paymentConfirmation)} {...(integrationApi || integrationMcp ? {...integrationHeader, onBack: back} : adminList ? {title: listingDecided ? 'Листинг' : 'BOTX', brand: listingDecided ? 'BOTX' : 'Администрирование', onBack: back} : adminReview || adminFees ? {...adminHeader, onBack: back} : paymentMatch ? {title: 'Оплата услуги', onBack: back} : showTradePortfolio ? {title: 'Портфель', onBack: back} : asset ? {title: title ?? 'Акция', onBack: back} : {})}>
       <Routes>
         <Route path="/" element={<MarketPage snapshot={snapshot} onRetry={() => source.reloadMarket()} />} />
         <Route path="/asset/:symbol/:side?" element={assetPage} />
         <Route path="/portfolio" element={<PortfolioPage snapshot={snapshot} />} />
         <Route path="/portfolio/after" element={showTradePortfolio && portfolioQuote ? <PortfolioPage snapshot={snapshot} tradeQuote={portfolioQuote} /> : <Navigate to="/portfolio" replace />} />
         <Route path="/balance" element={<BalancePage snapshot={snapshot} onBonus={claimBonus} />} />
-        <Route path="/payments/:requestId" element={<PaymentPage request={source.getPaymentRequest(paymentMatch?.params.requestId ?? '')} snapshot={snapshot} onPay={payService} onCancel={cancelPayment} onCheck={checkPayment} onDone={back} onPendingChange={setPaymentPending} />} />
+        <Route path="/payments/:requestId" element={<PaymentPage request={source.getPaymentRequest(paymentMatch?.params.requestId ?? '')} snapshot={snapshot} onPay={payService} onCancel={cancelPayment} onCheck={checkPayment} onDone={back} onPendingChange={setPaymentPending} onConfirmationChange={setPaymentConfirmation} />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/integrations/mcp" element={<McpAccessPage snapshot={snapshot} source={source} backRef={integrationBack} onHeaderChange={setIntegrationHeader} />} />
         <Route path="/integrations/api" element={<ApiAccessPage snapshot={snapshot} source={source} backRef={integrationBack} onHeaderChange={setIntegrationHeader} />} />

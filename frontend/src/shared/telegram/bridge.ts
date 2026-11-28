@@ -47,6 +47,7 @@ const events = [
   'safeAreaChanged', 'contentSafeAreaChanged',
 ] as const;
 const initialized = new WeakSet<TelegramApp>();
+const backOwners = new WeakMap<NonNullable<TelegramApp['BackButton']>, Set<() => void>>();
 
 export function getTelegramApp(scope: Window): TelegramApp | null {
   const {Telegram} = scope as Window & {Telegram?: {WebApp?: TelegramApp}};
@@ -130,11 +131,15 @@ export function subscribeTelegram(
 export function bindTelegramBack(app: TelegramApp | null, onBack: () => void): () => void {
   const back = app?.BackButton;
   if (!back || app?.isVersionAtLeast?.('6.1') === false) return () => {};
+  const owners = backOwners.get(back) ?? new Set<() => void>();
+  owners.add(onBack);
+  backOwners.set(back, owners);
   back.onClick(onBack);
   back.show();
 
   return () => {
     back.offClick(onBack);
-    back.hide();
+    owners.delete(onBack);
+    if (owners.size === 0) back.hide();
   };
 }

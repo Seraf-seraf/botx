@@ -1,5 +1,30 @@
 import {expect, test} from '@playwright/test';
 
+test('Telegram Back closes payment confirmation before leaving the payment page', async ({page}) => {
+  await page.route('https://telegram.org/js/**', (route) => route.fulfill({contentType: 'application/javascript', body: `
+    const handlers = new Set();
+    const state = {visible: false};
+    window.backState = state;
+    window.pressBack = () => [...handlers].forEach((handler) => handler());
+    window.Telegram = {WebApp: {platform: 'android', isVersionAtLeast: () => true, BackButton: {
+      show() { state.visible = true; }, hide() { state.visible = false; },
+      onClick(handler) { handlers.add(handler); }, offClick(handler) { handlers.delete(handler); },
+    }}};
+  `}));
+  await page.goto('/?scenario=payment-open#/payments/study-bot');
+  const payment = page.getByRole('button', {name: 'Оплатить 100,50 BC'});
+  await payment.click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.evaluate(() => (window as Window & {pressBack: () => void}).pressBack());
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(payment).toBeVisible();
+  await expect.poll(() => page.evaluate(() => (window as Window & {backState: {visible: boolean}}).backState.visible)).toBe(true);
+  await payment.click();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => (window as Window & {backState: {visible: boolean}}).backState.visible)).toBe(true);
+});
+
 test('works outside Telegram when the SDK request fails', async ({page}) => {
   await page.route('https://telegram.org/js/**', (route) => route.abort());
   const crashes: string[] = [];

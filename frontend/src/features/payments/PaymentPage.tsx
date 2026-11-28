@@ -1,4 +1,4 @@
-import {useId, useRef, useState} from 'react';
+import {useEffect, useId, useRef, useState} from 'react';
 import type {ReactElement} from 'react';
 import {MAX_FEE_BPS} from '../../shared/data/contracts';
 import type {AppSnapshot, PaymentRequest, PaymentResult} from '../../shared/data/contracts';
@@ -20,9 +20,10 @@ interface PaymentProps {
   onCheck(requestId: string): Promise<PaymentResult>;
   onDone(): void;
   onPendingChange(pending: boolean): void;
+  onConfirmationChange?(open: boolean): void;
 }
 
-export function PaymentPage({request, snapshot, onPay, onCancel, onCheck, onDone, onPendingChange}: PaymentProps): ReactElement {
+export function PaymentPage({request, snapshot, onPay, onCancel, onCheck, onDone, onPendingChange, onConfirmationChange}: PaymentProps): ReactElement {
   const headingId = useId();
   const [confirming, setConfirming] = useState(false);
   const [pending, setPending] = useState(false);
@@ -33,13 +34,20 @@ export function PaymentPage({request, snapshot, onPay, onCancel, onCheck, onDone
   const total = request ? request.amount + fee : 0;
   const status = pending ? 'pending' : request?.status;
 
+  useEffect(() => () => onConfirmationChange?.(false), [onConfirmationChange]);
+
+  function setConfirmation(open: boolean): void {
+    setConfirming(open);
+    onConfirmationChange?.(open);
+  }
+
   async function run(action: () => Promise<PaymentResult>): Promise<void> {
     if (active.current) return;
     active.current = true;
     setPending(true);
     onPendingChange(true);
     setError('');
-    setConfirming(false);
+    setConfirmation(false);
     let result: PaymentResult;
     try { result = await action(); }
     catch { result = {ok: false, reason: 'storage'}; }
@@ -74,7 +82,7 @@ export function PaymentPage({request, snapshot, onPay, onCancel, onCheck, onDone
         </dl></Card>
         <Card className={styles.note ?? ''}><strong>Разовый платёж</strong><p>Оплата проводится только после подтверждения. Доступ к кошельку не выдаётся.</p></Card>
         {error && <Feedback title={error} />}
-        <Button disabled={snapshot.balance < total} onClick={() => setConfirming(true)}>Оплатить {money(total)}</Button>
+        <Button disabled={snapshot.balance < total} onClick={() => setConfirmation(true)}>Оплатить {money(total)}</Button>
         {snapshot.balance < total && <Feedback title="Недостаточно средств для оплаты." />}
         <Button variant="secondary" onClick={() => { void run(() => onCancel(request.id)); }}>Отказаться</Button>
       </>}
@@ -104,9 +112,9 @@ export function PaymentPage({request, snapshot, onPay, onCancel, onCheck, onDone
       </>}
       {status === 'expired' && <><div><h1>Запрос недействителен</h1><p className={styles.caption}>Срок оплаты истёк или запрос отозван.</p></div>
         <Card className={styles.note ?? ''}><strong className={styles.warning}>Средства не списаны</strong><p>Откройте бота и запросите новую оплату.</p></Card><Button onClick={onDone}>Закрыть</Button></>}
-      {confirming && <Sheet headingId={headingId} topTitle="Подтверждение" onClose={() => setConfirming(false)}>
+      {confirming && <Sheet headingId={headingId} topTitle="Подтверждение" onClose={() => setConfirmation(false)}>
         <div className={styles.confirm}><h2 id={headingId}>Подтвердите оплату</h2><p>{request.recipient} · {money(total)}</p>
-          <Button onClick={pay}>Подтвердить {money(total)}</Button><Button variant="secondary" onClick={() => setConfirming(false)}>Отмена</Button></div>
+          <Button onClick={pay}>Подтвердить {money(total)}</Button><Button variant="secondary" onClick={() => setConfirmation(false)}>Отмена</Button></div>
       </Sheet>}
     </div>
   );
