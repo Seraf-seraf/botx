@@ -16,7 +16,17 @@ npm run dev
 
 ## Демоданные
 
-Котировки обновляются раз в 12 секунд, пока приложение активно. Сделки, портфель, история и ежедневный бонус сохраняются в `localStorage` этого браузера. Контракт источника данных определён в `frontend/src/shared/data/contracts.ts`, его локальная реализация находится в `demo-source.ts` в той же папке. Для проверки загрузки и ошибки биржи откройте `#/?demo=loading` или `#/?demo=error`.
+Котировки обновляются раз в 12 секунд, пока приложение активно. Сделки, портфель, история и ежедневный бонус сохраняются в `localStorage` этого браузера. Контракт источника данных определён в `frontend/src/shared/data/contracts.ts`, локальная реализация находится в `demo-source.ts`, а создаёт её `createAppDataSource.ts` в той же папке.
+
+Для воспроизводимой локальной проверки используйте ссылки `/?scenario=market-loading#/`, `/?scenario=market-error#/`, `/?scenario=market-empty#/` и `/?scenario=market-paused#/`. Приложение добавляет параметр `session`: сценарий хранит данные отдельно в `sessionStorage`, а перезагрузка продолжает ту же сессию. Ссылка без `session` начинает новую. Прежние ссылки `#/?demo=loading` и `#/?demo=error` также поддерживаются.
+
+Торговые сценарии: `/?scenario=buy-repriced#/asset/QST/buy`, `/?scenario=buy-insufficient#/asset/QST/buy`, `/?scenario=trade-unknown#/asset/QST/buy`, `/?scenario=trade-paused#/asset/QST/buy` и `/?scenario=portfolio-empty#/portfolio`. Они изолированы от обычного аккаунта и друг от друга; сохраните полный URL с параметром `session`, чтобы вернуться к прежнему состоянию. Аккаунт версии v1 читается новым источником, а изменения сохраняются в v2. Прежние операции остаются в истории с исходными суммами; комиссия применяется к новым сделкам.
+
+Локальные сценарии оплаты услуги: `/?scenario=payment-open#/payments/study-bot`, `/?scenario=payment-expired#/payments/study-bot` и `/?scenario=payment-unknown#/payments/study-bot`. Данные и результат сохраняются в той же изолированной сессии; обычный прямой маршрут `#/payments/study-bot` использует текущий локальный аккаунт. Эти сценарии работают без платёжного сервера или внешней платёжной системы.
+
+Административные экраны открываются по адресам `#/admin/listings`, `#/admin/listings/study-bot` и `#/admin/fees`. Для проверки состояний используйте `/?scenario=listing-pending#/admin/listings/study-bot`, `/?scenario=listing-approved#/admin/listings`, `/?scenario=listing-rejected#/admin/listings`, `/?scenario=fees-save-error#/admin/fees` и `/?scenario=fees-save-unknown#/admin/fees`. Состояние каждой такой ссылки изолировано в сессии; прямые маршруты без сценария используют обычный локальный аккаунт.
+
+Экраны интеграций доступны по прямым адресам `#/integrations/api` и `#/integrations/mcp`. Изолированные состояния: `/?scenario=api-connected#/integrations/api`, `/?scenario=api-disconnected#/integrations/api`, `/?scenario=mcp-connected#/integrations/mcp` и `/?scenario=mcp-disconnected#/integrations/mcp`. Состояние разрешений и лимита сохраняется в локальном аккаунте или отдельной сессии сценария. Источник создаётся в `frontend/src/shared/data/createAppDataSource.ts` и соответствует интерфейсу `AppDataSource`, что позволяет позднее заменить локальную реализацию. Подключение внешних сервисов здесь не выполняется.
 
 ## Проверки и сборка
 
