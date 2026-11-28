@@ -48,6 +48,32 @@ afterEach(() => {
 });
 
 describe('DemoDataSource', () => {
+  it('identifies an earlier unknown trade before accepting a new payment', async () => {
+    const storage = memory();
+    const source = new DemoDataSource({storage, initial: createDemoFixtures, now: Date.now,
+      random: () => 0.5, schedule: () => () => {}, scenario: 'trade-unknown'});
+    expect(await source.buy(order)).toEqual({ok: false, reason: 'unknown'});
+    const restored = makeSource(storage);
+    expect(await restored.payService('study-bot', 'payment-next', 10_050)).toEqual({
+      ok: false, reason: 'blocked', blocker: {kind: 'trade', id: order.id},
+    });
+    expect(await restored.checkTrade(order.id)).toMatchObject({ok: true});
+    expect(await restored.payService('study-bot', 'payment-next', 10_050)).toMatchObject({ok: true});
+    expect(restored.getSnapshot().operations.filter(({id}) => id === order.id || id === 'payment-next')).toHaveLength(2);
+  });
+
+  it('identifies an earlier unknown payment before accepting a new trade', async () => {
+    const storage = memory();
+    const source = new DemoDataSource({storage, initial: createDemoFixtures, now: Date.now,
+      random: () => 0.5, schedule: () => () => {}, scenario: 'payment-unknown'});
+    expect(await source.payService('study-bot', 'payment-original', 10_050)).toEqual({ok: false, reason: 'unknown'});
+    const restored = makeSource(storage);
+    expect(await restored.buy(order)).toEqual({ok: false, reason: 'blocked', blocker: {kind: 'payment', id: 'payment-original'}});
+    expect(await restored.checkPayment('payment-original')).toMatchObject({ok: true});
+    expect(await restored.buy(order)).toMatchObject({ok: true});
+    expect(restored.getSnapshot().operations.filter(({id}) => id === order.id || id === 'payment-original')).toHaveLength(2);
+  });
+
   it('persists API scopes and revocation without changing the account history', async () => {
     const storage = memory();
     const source = makeSource(storage);
@@ -336,7 +362,7 @@ describe('DemoDataSource', () => {
     expect(await source.buy(order)).toEqual({ok: false, reason: 'unknown'});
     const restored = create();
     expect(restored.getSnapshot().unknownTradeId).toBe(order.id);
-    expect(await restored.buy({...order, id: 'other'})).toEqual({ok: false, reason: 'unknown'});
+    expect(await restored.buy({...order, id: 'other'})).toEqual({ok: false, reason: 'blocked', blocker: {kind: 'trade', id: order.id}});
     expect(await restored.checkTrade('other')).toEqual({ok: false, reason: 'invalid'});
     expect(await restored.checkTrade(order.id)).toMatchObject({ok: true, operation: {id: order.id, amount: 78_120}});
     expect(restored.getSnapshot().balance).toBe(249_880);

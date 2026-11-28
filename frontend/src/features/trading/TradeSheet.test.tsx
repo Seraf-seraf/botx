@@ -39,7 +39,7 @@ describe('TradeSheet', () => {
     const onCheckTrade = vi.fn<(_: string) => Promise<OperationResult>>()
       .mockResolvedValueOnce({ok: false, reason: 'storage'})
       .mockResolvedValueOnce({ok: true, operation: purchase});
-    render(<TradeSheet fees={{buyBps: 500, sellBps: 500, transferBps: 50, serviceBps: 50}} quote={quote} side="buy" held={20} balance={328_000}
+    render(<TradeSheet onCheckPayment={vi.fn()} fees={{buyBps: 500, sellBps: 500, transferBps: 50, serviceBps: 50}} quote={quote} side="buy" held={20} balance={328_000}
       unknownTradeId={purchase.id} unknownOperation={purchase} onCheckTrade={onCheckTrade} onConfirm={onConfirm} onSuccess={onSuccess} onClose={vi.fn()} />);
 
     await act(async () => { fireEvent.click(screen.getByRole('button', {name: 'Проверить статус'})); });
@@ -55,7 +55,7 @@ describe('TradeSheet', () => {
   });
   it('does not submit empty, fractional or out-of-range input', () => {
     const onConfirm = vi.fn();
-    render(<TradeSheet fees={{buyBps: 500, sellBps: 500, transferBps: 50, serviceBps: 50}} onCheckTrade={vi.fn()} quote={quote} side="buy" held={20} balance={328_000} onConfirm={onConfirm} onSuccess={vi.fn()} onClose={vi.fn()} />);
+    render(<TradeSheet onCheckPayment={vi.fn()} fees={{buyBps: 500, sellBps: 500, transferBps: 50, serviceBps: 50}} onCheckTrade={vi.fn()} quote={quote} side="buy" held={20} balance={328_000} onConfirm={onConfirm} onSuccess={vi.fn()} onClose={vi.fn()} />);
     const input = screen.getByRole('spinbutton');
     for (const value of ['', '0.5', '1000']) {
       fireEvent.change(input, {target: {value}});
@@ -68,7 +68,7 @@ describe('TradeSheet', () => {
   });
   it('shows insufficient BC, blocks submits and restores the action after editing', () => {
     const onConfirm = vi.fn(async (): Promise<OperationResult> => ({ok: true, operation: purchase}));
-    render(<TradeSheet fees={{buyBps: 500, sellBps: 500, transferBps: 50, serviceBps: 50}} onCheckTrade={vi.fn()} quote={quote} side="buy" held={20} balance={328_000} onConfirm={onConfirm} onSuccess={vi.fn()} onClose={vi.fn()} />);
+    render(<TradeSheet onCheckPayment={vi.fn()} fees={{buyBps: 500, sellBps: 500, transferBps: 50, serviceBps: 50}} onCheckTrade={vi.fn()} quote={quote} side="buy" held={20} balance={328_000} onConfirm={onConfirm} onSuccess={vi.fn()} onClose={vi.fn()} />);
 
     const quantity = screen.getByRole('spinbutton', {name: 'Количество акций'});
     fireEvent.change(quantity, {target: {value: '14'}});
@@ -92,7 +92,7 @@ describe('TradeSheet', () => {
     const onConfirm = vi.fn((): Promise<OperationResult> => new Promise((done) => { resolve = done; }));
     const onSuccess = vi.fn();
     const onClose = vi.fn();
-    const {rerender} = render(<TradeSheet fees={{buyBps: 500, sellBps: 500, transferBps: 50, serviceBps: 50}} onCheckTrade={vi.fn()} quote={quote} side="buy" held={20} balance={328_000} onConfirm={onConfirm} onSuccess={onSuccess} onClose={onClose} />);
+    const {rerender} = render(<TradeSheet onCheckPayment={vi.fn()} fees={{buyBps: 500, sellBps: 500, transferBps: 50, serviceBps: 50}} onCheckTrade={vi.fn()} quote={quote} side="buy" held={20} balance={328_000} onConfirm={onConfirm} onSuccess={onSuccess} onClose={onClose} />);
     const quantity = screen.getByRole('spinbutton');
     const form = quantity.closest('form');
     if (!form) throw new Error('Missing trade form');
@@ -104,7 +104,7 @@ describe('TradeSheet', () => {
     fireEvent.click(screen.getByRole('button', {name: 'Назад'}));
     expect(onClose).not.toHaveBeenCalled();
 
-    rerender(<TradeSheet fees={{buyBps: 500, sellBps: 500, transferBps: 50, serviceBps: 50}} onCheckTrade={vi.fn()} quote={{...quote, price: 24_900}} side="buy" held={20} balance={328_000} onConfirm={onConfirm} onSuccess={onSuccess} onClose={onClose} />);
+    rerender(<TradeSheet onCheckPayment={vi.fn()} fees={{buyBps: 500, sellBps: 500, transferBps: 50, serviceBps: 50}} onCheckTrade={vi.fn()} quote={{...quote, price: 24_900}} side="buy" held={20} balance={328_000} onConfirm={onConfirm} onSuccess={onSuccess} onClose={onClose} />);
     expect(screen.getByText('248 BC')).toBeVisible();
     expect(onConfirm).toHaveBeenCalledTimes(1);
     await act(async () => { resolve({ok: true, operation: purchase}); });
@@ -116,7 +116,7 @@ describe('TradeSheet', () => {
     let resolve!: (result: OperationResult) => void;
     const onConfirm = vi.fn((): Promise<OperationResult> => new Promise((done) => { resolve = done; }));
     const onSuccess = vi.fn();
-    const {unmount} = render(<TradeSheet fees={{buyBps: 500, sellBps: 500, transferBps: 50, serviceBps: 50}} onCheckTrade={vi.fn()} quote={quote} side="buy" held={20} balance={328_000} onConfirm={onConfirm} onSuccess={onSuccess} onClose={vi.fn()} />);
+    const {unmount} = render(<TradeSheet onCheckPayment={vi.fn()} fees={{buyBps: 500, sellBps: 500, transferBps: 50, serviceBps: 50}} onCheckTrade={vi.fn()} quote={quote} side="buy" held={20} balance={328_000} onConfirm={onConfirm} onSuccess={onSuccess} onClose={vi.fn()} />);
     fireEvent.click(screen.getByRole('button', {name: 'Купить 3 акции'}));
     expect(onConfirm).toHaveBeenCalledTimes(1);
     unmount();

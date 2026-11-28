@@ -550,7 +550,9 @@ export class DemoDataSource implements AppDataSource {
       if (payment.requestId === requestId && payment.total === expectedTotal && payment.status === 'paid') return {ok: true, request: payment};
       if (payment.status === 'unknown') return {ok: false, reason: 'unknown'};
       if (payment.status !== 'open' || this.account.operations.some((item) => item.id === requestId)) return {ok: false, reason: 'invalid'};
-      if (this.account.extras?.unknownTradeId) return {ok: false, reason: 'invalid'};
+      if (typeof this.account.extras?.unknownTradeId === 'string') {
+        return {ok: false, reason: 'blocked', blocker: {kind: 'trade', id: this.account.extras.unknownTradeId}};
+      }
       const total = payment.amount + Math.round(payment.amount * this.snapshot.fees.serviceBps / MAX_FEE_BPS);
       if (!Number.isSafeInteger(total)) return {ok: false, reason: 'invalid'};
       if (expectedTotal !== total) return {ok: false, reason: 'price-changed'};
@@ -597,7 +599,15 @@ export class DemoDataSource implements AppDataSource {
 
   private trade(side: TradeSide, order: TradeOrder): OperationResult {
     const {symbol, quantity, id, unitPrice, feeBps} = order;
-    if (this.account.extras?.unknownTradeId || savedPayment(this.account)?.status === 'unknown') return {ok: false, reason: 'unknown'};
+    const unknownTradeId = this.account.extras?.unknownTradeId;
+    if (typeof unknownTradeId === 'string') {
+      return unknownTradeId === id ? {ok: false, reason: 'unknown'} :
+        {ok: false, reason: 'blocked', blocker: {kind: 'trade', id: unknownTradeId}};
+    }
+    const unknownPayment = savedPayment(this.account);
+    if (unknownPayment?.status === 'unknown' && unknownPayment.requestId) {
+      return {ok: false, reason: 'blocked', blocker: {kind: 'payment', id: unknownPayment.requestId}};
+    }
     if (!id || id.length > 128 || id.startsWith('bonus-') || id.startsWith('demo-') ||
       !Number.isSafeInteger(quantity) || quantity < 1 || quantity > MAX_TRADE_QUANTITY ||
       !Number.isSafeInteger(unitPrice) || unitPrice < 1 || !Number.isSafeInteger(feeBps) || feeBps < 0 || feeBps > MAX_FEE_BPS) {

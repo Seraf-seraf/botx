@@ -94,7 +94,13 @@ export interface PaymentRequest {
 
 export type PaymentResult =
   | {readonly ok: true; readonly request: PaymentRequest}
+  | {readonly ok: false; readonly reason: 'blocked'; readonly blocker: PendingFinancialOperation}
   | {readonly ok: false; readonly reason: 'invalid' | 'funds' | 'price-changed' | 'storage' | 'unknown'};
+
+export interface PendingFinancialOperation {
+  readonly kind: 'trade' | 'payment';
+  readonly id: string;
+}
 
 export interface AppSnapshot {
   readonly integrations: {readonly api: ApiAccess; readonly mcp: McpAccess};
@@ -124,6 +130,7 @@ export interface TradeOrder {
 
 export type OperationResult =
   | {readonly ok: true; readonly operation: Operation}
+  | {readonly ok: false; readonly reason: 'blocked'; readonly blocker: PendingFinancialOperation}
   | {readonly ok: false; readonly reason: 'invalid' | 'funds' | 'shares' | 'price-changed' | 'claimed' | 'storage' | 'unknown'};
 
 export interface AppDataSource {

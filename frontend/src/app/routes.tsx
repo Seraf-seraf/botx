@@ -80,7 +80,7 @@ export function AppRoutes({source}: {source: AppDataSource}): ReactElement {
   const assetPage = asset && receipt
     ? <TradeReceipt operation={receipt} quote={asset} balance={snapshot.balance} held={snapshot.holdings[asset.symbol]?.quantity ?? 0} />
     : asset && (!side || tradeSide)
-      ? <AssetPage key={asset.symbol} quote={asset} snapshot={snapshot} {...(tradeSide && !paused ? {side: tradeSide} : {})} onBack={back} onTrade={trade} onCheckTrade={(id) => source.checkTrade(id)} />
+      ? <AssetPage key={asset.symbol} quote={asset} snapshot={snapshot} {...(tradeSide && !paused ? {side: tradeSide} : {})} onBack={back} onTrade={trade} onCheckTrade={(id) => source.checkTrade(id)} onCheckPayment={checkPayment} />
       : <Navigate to="/" replace />;
 
   const title = receipt ? (receipt.kind === 'buy' ? 'Покупка' : 'Продажа') : tradeSide && !paused ? asset?.name : 'Акция';
@@ -92,7 +92,7 @@ export function AppRoutes({source}: {source: AppDataSource}): ReactElement {
         <Route path="/portfolio" element={<PortfolioPage snapshot={snapshot} />} />
         <Route path="/portfolio/after" element={showTradePortfolio && portfolioQuote ? <PortfolioPage snapshot={snapshot} tradeQuote={portfolioQuote} /> : <Navigate to="/portfolio" replace />} />
         <Route path="/balance" element={<BalancePage snapshot={snapshot} onBonus={claimBonus} />} />
-        <Route path="/payments/:requestId" element={<PaymentPage request={source.getPaymentRequest(paymentMatch?.params.requestId ?? '')} snapshot={snapshot} onPay={payService} onCancel={cancelPayment} onCheck={checkPayment} onDone={back} onPendingChange={setPaymentPending} onConfirmationChange={setPaymentConfirmation} />} />
+        <Route path="/payments/:requestId" element={<PaymentPage request={source.getPaymentRequest(paymentMatch?.params.requestId ?? '')} snapshot={snapshot} onPay={payService} onCancel={cancelPayment} onCheck={checkPayment} onCheckTrade={(id) => source.checkTrade(id)} onDone={back} onPendingChange={setPaymentPending} onConfirmationChange={setPaymentConfirmation} />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/integrations/mcp" element={<McpAccessPage snapshot={snapshot} source={source} backRef={integrationBack} onHeaderChange={setIntegrationHeader} />} />
         <Route path="/integrations/api" element={<ApiAccessPage snapshot={snapshot} source={source} backRef={integrationBack} onHeaderChange={setIntegrationHeader} />} />

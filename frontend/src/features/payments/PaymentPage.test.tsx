@@ -19,7 +19,7 @@ describe('PaymentPage', () => {
   it('requires confirmation, blocks duplicate submission and preserves the request after a storage error', async () => {
     let resolve!: (result: PaymentResult) => void;
     const onPay = vi.fn(() => new Promise<PaymentResult>((done) => { resolve = done; }));
-    render(<PaymentPage request={request} snapshot={snapshot} onPay={onPay} onCancel={vi.fn()} onCheck={vi.fn()} onDone={vi.fn()} onPendingChange={vi.fn()} />);
+    render(<PaymentPage onCheckTrade={vi.fn()} request={request} snapshot={snapshot} onPay={onPay} onCancel={vi.fn()} onCheck={vi.fn()} onDone={vi.fn()} onPendingChange={vi.fn()} />);
     fireEvent.click(screen.getByRole('button', {name: 'Оплатить 100,50 BC'}));
     expect(onPay).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', {name: 'Подтвердить 100,50 BC'}));
@@ -33,7 +33,7 @@ describe('PaymentPage', () => {
   it('checks the original unknown request and never resubmits payment', async () => {
     const onPay = vi.fn();
     const onCheck = vi.fn(async (): Promise<PaymentResult> => ({ok: false, reason: 'storage'}));
-    render(<PaymentPage request={{...request, status: 'unknown', requestId: 'original', total: 10_050}} snapshot={snapshot}
+    render(<PaymentPage onCheckTrade={vi.fn()} request={{...request, status: 'unknown', requestId: 'original', total: 10_050}} snapshot={snapshot}
       onPay={onPay} onCancel={vi.fn()} onCheck={onCheck} onDone={vi.fn()} onPendingChange={vi.fn()} />);
     await act(async () => { fireEvent.click(screen.getByRole('button', {name: 'Проверить статус'})); });
     expect(onCheck).toHaveBeenCalledWith('original');

@@ -1,7 +1,7 @@
 import {useEffect, useId, useRef, useState} from 'react';
 import type {ReactElement} from 'react';
 import {MAX_TRADE_QUANTITY} from '../../shared/data/contracts';
-import type {FeeSettings, Operation, OperationResult, Quote, TradeSide} from '../../shared/data/contracts';
+import type {FeeSettings, Operation, OperationResult, PaymentResult, PendingFinancialOperation, Quote, TradeSide} from '../../shared/data/contracts';
 import {tradePreview} from '../../shared/data/trade-preview';
 import {Button} from '../../shared/ui/Button';
 import {Feedback} from '../../shared/ui/Feedback';
@@ -33,6 +33,7 @@ interface TradeProps {
   unknownOperation?: Operation;
   initialQuantity?: number;
   onCheckTrade: (id: string) => Promise<OperationResult>;
+  onCheckPayment: (id: string) => Promise<PaymentResult>;
   onClose: () => void;
   onUnknownClose?: () => void;
   onPendingChange?: (pending: boolean) => void;
@@ -40,7 +41,7 @@ interface TradeProps {
   onSuccess: (operation: Operation) => void;
 }
 
-export function TradeSheet({quote, side, balance, held, fees, unknownTradeId, unknownOperation, initialQuantity, onCheckTrade, onClose, onUnknownClose, onConfirm, onSuccess, onPendingChange}: TradeProps): ReactElement {
+export function TradeSheet({quote, side, balance, held, fees, unknownTradeId, unknownOperation, initialQuantity, onCheckTrade, onCheckPayment, onClose, onUnknownClose, onConfirm, onSuccess, onPendingChange}: TradeProps): ReactElement {
   const headingId = useId();
   const errorId = useId();
   const buying = side === 'buy';
@@ -49,13 +50,14 @@ export function TradeSheet({quote, side, balance, held, fees, unknownTradeId, un
   const [preview, setPreview] = useState<{price: number; balance: number; held: number; feeBps: number}>();
   const [error, setError] = useState('');
   const [checking, setChecking] = useState(false);
+  const [blocker, setBlocker] = useState<PendingFinancialOperation>();
   const job = useRef<object | null>(null);
   const {price, balance: available, held: availableShares} = preview ?? {price: quote.price, balance, held};
   const feeBps = preview?.feeBps ?? (buying ? fees.buyBps : fees.sellBps);
   const {gross, fee, total: amount} = tradePreview(side, quantity, price, feeBps);
   const shortfall = buying ? Math.max(0, amount - available) : 0;
   const invalidQuantity = !Number.isSafeInteger(quantity) || quantity < 1 || quantity > limit;
-  const canSubmit = !invalidQuantity && shortfall === 0 && !unknownTradeId;
+  const canSubmit = !invalidQuantity && shortfall === 0 && !unknownTradeId && !blocker;
   const busy = preview !== undefined;
   const showingUnknown = Boolean(unknownTradeId) && (!busy || checking);
 
@@ -76,6 +78,7 @@ export function TradeSheet({quote, side, balance, held, fees, unknownTradeId, un
     onPendingChange?.(false);
     setPreview(undefined);
     if (result.ok) onSuccess(result.operation);
+    else if (result.reason === 'blocked') setBlocker(result.blocker);
     else setError(result.reason === 'unknown' ? '' : errorMessages[result.reason]);
   }
 
@@ -94,7 +97,30 @@ export function TradeSheet({quote, side, balance, held, fees, unknownTradeId, un
     setChecking(false);
     setPreview(undefined);
     if (result.ok) onSuccess(result.operation);
-    else setError(errorMessages[result.reason]);
+    else setError(result.reason === 'blocked' ? 'Сначала проверьте предыдущую операцию.' : errorMessages[result.reason]);
+  }
+
+  async function checkBlocker(): Promise<void> {
+    if (!blocker || job.current) return;
+    const request = {};
+    job.current = request;
+    setError('');
+    setPreview({price, balance: available, held: availableShares, feeBps});
+    onPendingChange?.(true);
+    try {
+      const result = blocker.kind === 'payment' ? await onCheckPayment(blocker.id) : await onCheckTrade(blocker.id);
+      if (job.current !== request) return;
+      if (result.ok) setBlocker(undefined);
+      else setError('Не удалось проверить предыдущую операцию. Попробуйте ещё раз.');
+    } catch {
+      if (job.current === request) setError('Не удалось проверить предыдущую операцию. Попробуйте ещё раз.');
+    } finally {
+      if (job.current === request) {
+        job.current = null;
+        setPreview(undefined);
+        onPendingChange?.(false);
+      }
+    }
   }
 
   function confirm(): void {
@@ -154,10 +180,11 @@ export function TradeSheet({quote, side, balance, held, fees, unknownTradeId, un
           {error && (error === errorMessages['price-changed']
             ? <div className={styles.reprice} role="alert"><strong>Цена изменилась</strong><p>Старая котировка недействительна. Проверьте новый расчёт.</p></div>
             : <Feedback title={error} />)}
+          {blocker && <Feedback title="Сначала проверьте предыдущую операцию" description="Её результат пока не подтверждён." />}
           {busy && <div className={styles.pending} role="status"><strong>Операция выполняется</strong><p>Не отправляйте запрос повторно. Ожидаем подтверждение.</p></div>}
         </div>
         <div className={styles.action}>
-          {showingUnknown ? <Button key="check" busy={busy} type="button" onClick={(event) => { event.preventDefault(); void checkStatus(); }}>Проверить статус</Button> :
+          {blocker ? <Button key="blocker" busy={busy} type="button" onClick={() => void checkBlocker()}>Проверить предыдущую операцию</Button> : showingUnknown ? <Button key="check" busy={busy} type="button" onClick={(event) => { event.preventDefault(); void checkStatus(); }}>Проверить статус</Button> :
             <Button key="submit" busy={busy} disabled={!canSubmit} type="submit">
               {busy ? (buying ? 'Покупаем…' : 'Продаём…') : shortfall ? 'Недостаточно средств' : error === errorMessages['price-changed'] ? 'Подтвердить новую цену' : `${buying ? 'Купить' : 'Продать'} ${shares(quantity)}`}
             </Button>}

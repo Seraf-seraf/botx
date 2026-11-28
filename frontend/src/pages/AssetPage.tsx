@@ -3,7 +3,7 @@ import type {ReactElement} from 'react';
 import {useBlocker, useLocation, useNavigate} from 'react-router-dom';
 import {historySince, PriceChart} from '../features/market/PriceChart';
 import {TradeSheet} from '../features/trading/TradeSheet';
-import type {AppSnapshot, OperationResult, Quote, TradeOrder, TradeSide} from '../shared/data/contracts';
+import type {AppSnapshot, OperationResult, PaymentResult, Quote, TradeOrder, TradeSide} from '../shared/data/contracts';
 import {Badge} from '../shared/ui/Badge';
 import {Button} from '../shared/ui/Button';
 import {Card} from '../shared/ui/Card';
@@ -33,9 +33,10 @@ interface AssetProps {
   onBack: () => void;
   onTrade: (side: TradeSide, order: TradeOrder) => Promise<OperationResult>;
   onCheckTrade: (id: string) => Promise<OperationResult>;
+  onCheckPayment: (id: string) => Promise<PaymentResult>;
 }
 
-export function AssetPage({quote, snapshot, side, onBack, onTrade, onCheckTrade}: AssetProps): ReactElement {
+export function AssetPage({quote, snapshot, side, onBack, onTrade, onCheckTrade, onCheckPayment}: AssetProps): ReactElement {
   const [range, setRange] = useState<Range>('week');
   const pendingTrade = useRef(false);
   const shouldBlock = useCallback((): boolean => pendingTrade.current, []);
@@ -140,6 +141,7 @@ export function AssetPage({quote, snapshot, side, onBack, onTrade, onCheckTrade}
           {...(snapshot.unknownTradeId ? {unknownTradeId: snapshot.unknownTradeId} : {})}
           {...(snapshot.unknownTrade ? {unknownOperation: snapshot.unknownTrade} : {})}
           onCheckTrade={onCheckTrade}
+          onCheckPayment={onCheckPayment}
           onUnknownClose={() => void navigate('/', {replace: true})}
           onClose={onBack}
           onPendingChange={setTradePending}

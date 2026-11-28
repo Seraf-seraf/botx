@@ -1,5 +1,36 @@
 import {expect, test} from '@playwright/test';
 
+test('a payment resolves an earlier unknown trade before it can be submitted', async ({page}) => {
+  await page.goto('/?scenario=trade-unknown#/asset/QST/buy');
+  await page.getByRole('button', {name: /Купить 3/}).click();
+  await expect(page.getByText('Результат пока неизвестен')).toBeVisible();
+  await page.getByRole('button', {name: 'Вернуться на биржу'}).click();
+  await page.evaluate(() => { location.hash = '#/payments/study-bot'; });
+  await page.getByRole('button', {name: 'Оплатить 100,50 BC'}).click();
+  await page.getByRole('dialog').getByRole('button', {name: 'Подтвердить 100,50 BC'}).click();
+  await expect(page.getByText('Сначала проверьте предыдущую операцию')).toBeVisible();
+  await page.getByRole('button', {name: 'Проверить предыдущую операцию'}).click();
+  await expect(page.getByRole('button', {name: 'Оплатить 100,50 BC'})).toBeEnabled();
+  await page.getByRole('button', {name: 'Оплатить 100,50 BC'}).click();
+  await page.getByRole('dialog').getByRole('button', {name: 'Подтвердить 100,50 BC'}).click();
+  await expect(page.getByRole('heading', {name: 'Платёж выполнен'})).toBeVisible();
+});
+
+test('a trade resolves an earlier unknown payment and preserves its quantity', async ({page}) => {
+  await page.goto('/?scenario=payment-unknown#/payments/study-bot');
+  await page.getByRole('button', {name: 'Оплатить 100,50 BC'}).click();
+  await page.getByRole('dialog').getByRole('button', {name: 'Подтвердить 100,50 BC'}).click();
+  await expect(page.getByRole('heading', {name: 'Проверяем платёж'})).toBeVisible();
+  await page.reload();
+  await page.evaluate(() => { location.hash = '#/asset/QST/buy'; });
+  await page.getByRole('button', {name: /Купить 3/}).click();
+  await expect(page.getByText('Сначала проверьте предыдущую операцию')).toBeVisible();
+  await page.getByRole('button', {name: 'Проверить предыдущую операцию'}).click();
+  await expect(page.getByRole('button', {name: /Купить 3/})).toBeEnabled();
+  await page.getByRole('button', {name: /Купить 3/}).click();
+  await expect(page.getByRole('heading', {name: 'Куплено 3 акции'})).toBeVisible();
+});
+
 test('confirms payment once, restores the receipt, and shows the shared wallet', async ({page}) => {
   await page.goto('/?scenario=payment-open#/payments/study-bot');
   await expect(page.getByRole('heading', {name: 'Запрос на оплату'})).toBeVisible();

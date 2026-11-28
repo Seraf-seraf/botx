@@ -1,7 +1,7 @@
 import {useEffect, useId, useRef, useState} from 'react';
 import type {ReactElement} from 'react';
 import {MAX_FEE_BPS} from '../../shared/data/contracts';
-import type {AppSnapshot, PaymentRequest, PaymentResult} from '../../shared/data/contracts';
+import type {AppSnapshot, OperationResult, PaymentRequest, PaymentResult, PendingFinancialOperation} from '../../shared/data/contracts';
 import {Button} from '../../shared/ui/Button';
 import {Card} from '../../shared/ui/Card';
 import {Feedback} from '../../shared/ui/Feedback';
@@ -18,16 +18,18 @@ interface PaymentProps {
   onPay(id: string, requestId: string, total: number): Promise<PaymentResult>;
   onCancel(id: string): Promise<PaymentResult>;
   onCheck(requestId: string): Promise<PaymentResult>;
+  onCheckTrade(id: string): Promise<OperationResult>;
   onDone(): void;
   onPendingChange(pending: boolean): void;
   onConfirmationChange?(open: boolean): void;
 }
 
-export function PaymentPage({request, snapshot, onPay, onCancel, onCheck, onDone, onPendingChange, onConfirmationChange}: PaymentProps): ReactElement {
+export function PaymentPage({request, snapshot, onPay, onCancel, onCheck, onCheckTrade, onDone, onPendingChange, onConfirmationChange}: PaymentProps): ReactElement {
   const headingId = useId();
   const [confirming, setConfirming] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
+  const [blocker, setBlocker] = useState<PendingFinancialOperation>();
   const active = useRef(false);
   const requestId = useRef<string | undefined>(undefined);
   const fee = request ? Math.round(request.amount * snapshot.fees.serviceBps / MAX_FEE_BPS) : 0;
@@ -54,11 +56,32 @@ export function PaymentPage({request, snapshot, onPay, onCancel, onCheck, onDone
     active.current = false;
     setPending(false);
     onPendingChange(false);
-    if (!result.ok && result.reason !== 'unknown') {
+    if (!result.ok && result.reason === 'blocked') {
+      setBlocker(result.blocker);
+    } else if (!result.ok && result.reason !== 'unknown') {
       setError(result.reason === 'price-changed' ? 'Сумма изменилась. Проверьте расчёт и подтвердите платёж снова.' :
         result.reason === 'funds' ? 'Недостаточно средств для оплаты.' :
           result.reason === 'storage' ? 'Не удалось сохранить платёж. Попробуйте ещё раз.' : 'Запрос недействителен.');
       if (result.reason === 'price-changed') requestId.current = undefined;
+    }
+  }
+
+  async function checkBlocker(): Promise<void> {
+    if (!blocker || active.current) return;
+    active.current = true;
+    setPending(true);
+    onPendingChange(true);
+    setError('');
+    try {
+      const result = blocker.kind === 'trade' ? await onCheckTrade(blocker.id) : await onCheck(blocker.id);
+      if (result.ok) setBlocker(undefined);
+      else setError('Не удалось проверить предыдущую операцию. Попробуйте ещё раз.');
+    } catch {
+      setError('Не удалось проверить предыдущую операцию. Попробуйте ещё раз.');
+    } finally {
+      active.current = false;
+      setPending(false);
+      onPendingChange(false);
     }
   }
 
@@ -82,7 +105,8 @@ export function PaymentPage({request, snapshot, onPay, onCancel, onCheck, onDone
         </dl></Card>
         <Card className={styles.note ?? ''}><strong>Разовый платёж</strong><p>Оплата проводится только после подтверждения. Доступ к кошельку не выдаётся.</p></Card>
         {error && <Feedback title={error} />}
-        <Button disabled={snapshot.balance < total} onClick={() => setConfirmation(true)}>Оплатить {money(total)}</Button>
+        {blocker && <><Feedback title="Сначала проверьте предыдущую операцию" description="Её результат пока не подтверждён." /><Button onClick={() => void checkBlocker()}>Проверить предыдущую операцию</Button></>}
+        <Button disabled={snapshot.balance < total || Boolean(blocker)} onClick={() => setConfirmation(true)}>Оплатить {money(total)}</Button>
         {snapshot.balance < total && <Feedback title="Недостаточно средств для оплаты." />}
         <Button variant="secondary" onClick={() => { void run(() => onCancel(request.id)); }}>Отказаться</Button>
       </>}
