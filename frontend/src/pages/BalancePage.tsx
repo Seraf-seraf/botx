@@ -38,9 +38,7 @@ export function BalancePage({snapshot, onBonus}: BalanceProps): ReactElement {
       <h1>Баланс</h1>
       <Card className={styles.balanceSummary ?? ''}>
         <p className={styles.caption}>Доступно</p>
-        <strong className={styles.total}>{formatBc(snapshot.balance)}</strong>
-        <p className={styles.caption}>Виртуальные боткоины</p>
-        <p className={styles.axisLabel}>Используются только внутри игры</p>
+        <strong className={styles.total}>{snapshot.operations.some(({kind}) => kind === 'payment') ? formatBc(snapshot.balance).replace(/,(\d) BC$/, ',$10 BC') : formatBc(snapshot.balance)}</strong>
       </Card>
       <button className={styles.bonus} data-claimed={snapshot.bonusClaimed} type="button" onClick={() => { void handleBonus(); }} aria-busy={pending || undefined} disabled={snapshot.bonusClaimed || pending}>
         <span className={styles.bonusIcon}><Icon name={snapshot.bonusClaimed ? 'check' : 'gift'} /></span>
@@ -53,7 +51,7 @@ export function BalancePage({snapshot, onBonus}: BalanceProps): ReactElement {
       {error && <Feedback title={error} />}
       <section className={styles.section} aria-labelledby="balance-operations">
         <h2 id="balance-operations">История операций</h2>
-        <OperationList operations={snapshot.operations} />
+        <OperationList operations={snapshot.operations} now={snapshot.now} />
       </section>
     </div>
   );

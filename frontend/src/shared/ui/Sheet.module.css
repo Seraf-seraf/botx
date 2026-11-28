@@ -23,6 +23,25 @@
   overscroll-behavior: contain;
   border-radius: var(--botx-radius-24) var(--botx-radius-24) 0 0;
   background: var(--botx-surface);
+  animation: sheet-enter var(--botx-motion-sheet) ease-out;
+}
+
+.sheet[data-closing='true'] .panel {
+  animation: sheet-exit var(--botx-motion-sheet) ease-in forwards;
+}
+
+@keyframes sheet-enter {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sheet-exit {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(24px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel, .sheet[data-closing='true'] .panel { animation: none; }
 }
 
 .topBar {

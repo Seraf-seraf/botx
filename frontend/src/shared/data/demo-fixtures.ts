@@ -1,16 +1,16 @@
 import type {AppSnapshot, PricePoint, Quote} from './contracts';
-import {useAppSnapshot} from './useAppSnapshot';
-import type {DemoData} from './useAppSnapshot';
+
+export const API_KEY_MASK = 'botx_••••••••••••';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const MARKET_DEPTH_DAYS = 30;
 const SEED_POINTS_PER_DAY = 12;
 
 const catalog = [
-  {symbol: 'QST', name: 'QuestBot', icon: 'robot', price: 24_800, priorPrice: 22_064, isNew: false},
-  {symbol: 'DICE', name: 'DiceLab', icon: 'dice-5', price: 17_600, priorPrice: 18_182, isNew: false},
-  {symbol: 'MUSE', name: 'Muse AI', icon: 'brain', price: 9_400, priorPrice: 8_885, isNew: true},
-  {symbol: 'NEKO', name: 'NekoBot', icon: 'cat', price: 31_200, priorPrice: 30_439, isNew: true},
+  {symbol: 'QST', name: 'QuestBot', icon: 'robot', price: 24_800, priorPrice: 22_064, isNew: false, tradingStatus: 'active'},
+  {symbol: 'DICE', name: 'DiceLab', icon: 'dice-5', price: 17_600, priorPrice: 18_182, isNew: false, tradingStatus: 'active'},
+  {symbol: 'MUSE', name: 'Muse AI', icon: 'brain', price: 9_400, priorPrice: 8_885, isNew: true, tradingStatus: 'active'},
+  {symbol: 'NEKO', name: 'NekoBot', icon: 'cat', price: 31_200, priorPrice: 30_439, isNew: true, tradingStatus: 'active'},
 ] as const satisfies readonly Omit<Quote, 'history'>[];
 
 const rise = [0, 0.07, 0.14, 0.09, 0.3, 0.36, 0.31, 0.49, 0.57, 0.5, 0.66, 0.73, 0.8, 0.74, 0.9, 0.93, 1];
@@ -45,6 +45,17 @@ function atTime(now: number, daysAgo: number, hours: number, minutes: number): n
 
 export function createDemoFixtures(now: number): AppSnapshot {
   return {
+    integrations: {api: {connected: true, scopes: ['quotes', 'history', 'rewards', 'payments']},
+      mcp: {connected: true, scopes: ['market', 'trade', 'history'], limitMinor: 50_000}},
+    listings: [
+      {id: 'study-bot', name: 'Study Bot', username: '@study_bot', status: 'pending'},
+      {id: 'quest-bot', name: 'Quest Bot', username: '@quest_bot', status: 'pending'},
+      {id: 'music-bot', name: 'Music Bot', username: '@music_bot', status: 'revision'},
+    ],
+    marketStatus: 'ready',
+    payments: [],
+    now,
+    fees: {buyBps: 500, sellBps: 500, transferBps: 50, serviceBps: 50},
     balance: 328_000,
     quotes: catalog.map((quote) => ({...quote, history: history(quote, now)})),
     holdings: {
@@ -59,8 +70,4 @@ export function createDemoFixtures(now: number): AppSnapshot {
     ],
     bonusClaimed: false,
   };
-}
-
-export function useDemoData(): DemoData {
-  return useAppSnapshot(createDemoFixtures);
 }

@@ -1,6 +1,6 @@
-import {useEffect, useRef, useState} from 'react';
+import {useRef, useState} from 'react';
 import type {ReactElement} from 'react';
-import {Link, useSearchParams} from 'react-router-dom';
+import {Link, useLocation, useNavigationType, useSearchParams} from 'react-router-dom';
 import {historySince, PriceChart} from '../features/market/PriceChart';
 import type {AppSnapshot, PricePoint, Quote} from '../shared/data/contracts';
 import {Badge} from '../shared/ui/Badge';
@@ -27,7 +27,6 @@ const INDEX_BASE = 1284.6;
 const INDEX_OPEN_TOTAL = 83_000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DAY_CHANGE_AT_OPEN = 2.8;
-const DEMO_LOADING_MS = 850;
 
 function matchesFilter(quote: Quote, filter: Filter): boolean {
   switch (filter) {
@@ -48,31 +47,41 @@ function indexPoints(quotes: readonly Quote[]): PricePoint[] {
   }));
 }
 
-export function MarketPage({snapshot}: {snapshot: AppSnapshot}): ReactElement {
+export function MarketPage({snapshot, onRetry}: {snapshot: AppSnapshot; onRetry: () => void}): ReactElement {
   const [params, setParams] = useSearchParams();
-  const phase = params.get('demo');
+  const navigationType = useNavigationType();
+  const {key: locationKey} = useLocation();
+  const phase = snapshot.marketStatus;
   const input = useRef<HTMLInputElement>(null);
-  const [query, setQuery] = useState('');
-  const [filter, setFilter] = useState<Filter>('all');
+  const [query, setQueryState] = useState(() => params.get('q') ?? '');
+  const [lastPopKey, setLastPopKey] = useState(locationKey);
+  const filter = filters.find(({value}) => value === params.get('filter'))?.value ?? 'all';
+  if (navigationType === 'POP' && locationKey !== lastPopKey) {
+    setLastPopKey(locationKey);
+    setQueryState(params.get('q') ?? '');
+  }
+  function updateParams(changes: Record<string, string>): void {
+    setParams((current) => {
+      const next = new URLSearchParams(current);
+      for (const [key, value] of Object.entries(changes)) {
+        if (value) next.set(key, value);
+        else next.delete(key);
+      }
+      return next;
+    }, {replace: true});
+  }
+  const setQuery = (value: string): void => {
+    setQueryState(value);
+    updateParams({q: value});
+  };
+  const setFilter = (value: Filter): void => updateParams({q: query, filter: value === 'all' ? '' : value});
   const search = query.trim().toLocaleLowerCase('ru-RU');
   const quotes = snapshot.quotes.filter((quote) => matchesFilter(quote, filter) &&
     `${quote.name} ${quote.symbol}`.toLocaleLowerCase('ru-RU').includes(search));
   const empty = phase !== 'loading' && phase !== 'error' && quotes.length === 0;
-  useEffect(() => {
-    if (phase !== 'loading') return undefined;
-    const timer = window.setTimeout(() => {
-      setParams((current) => {
-        const next = new URLSearchParams(current);
-        next.delete('demo');
-        return next;
-      }, {replace: true});
-    }, DEMO_LOADING_MS);
-    return () => window.clearTimeout(timer);
-  }, [phase, setParams]);
-
   function reset(): void {
-    setQuery('');
-    setFilter('all');
+    setQueryState('');
+    updateParams({q: '', filter: ''});
     input.current?.focus();
   }
 
@@ -88,7 +97,7 @@ export function MarketPage({snapshot}: {snapshot: AppSnapshot}): ReactElement {
         </Link>
       </div>
       {phase === 'error' ? (
-        <ErrorState onRetry={() => setParams({demo: 'loading'}, {replace: true})} />
+        <ErrorState onRetry={() => { updateParams({demo: ''}); onRetry(); }} />
       ) : (
         <>
           <SearchField value={query} onChange={setQuery} inputRef={input} />

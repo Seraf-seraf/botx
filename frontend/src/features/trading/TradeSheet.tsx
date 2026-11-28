@@ -1,16 +1,17 @@
 import {useEffect, useId, useRef, useState} from 'react';
 import type {ReactElement} from 'react';
 import {MAX_TRADE_QUANTITY} from '../../shared/data/contracts';
-import type {Operation, OperationResult, Quote, TradeSide} from '../../shared/data/contracts';
+import type {FeeSettings, Operation, OperationResult, Quote, TradeSide} from '../../shared/data/contracts';
+import {tradePreview} from '../../shared/data/trade-preview';
 import {Button} from '../../shared/ui/Button';
 import {Feedback} from '../../shared/ui/Feedback';
 import {QuantityInput} from '../../shared/ui/QuantityInput';
-import {Sheet} from '../../shared/ui/Sheet';
+import {Sheet, SheetClose} from '../../shared/ui/Sheet';
 import {formatBc, shares} from '../../shared/ui/market';
 import styles from './TradeSheet.module.css';
 
 const START_QUANTITY = 3;
-const SUBMIT_FEEDBACK_MS = 400;
+function money(amount: number): string { return formatBc(amount).replace(/,(\d) BC$/, ',$10 BC'); }
 
 const errorMessages = {
   funds: 'Недостаточно BC. Уменьшите количество акций.',
@@ -19,6 +20,7 @@ const errorMessages = {
   invalid: 'Проверьте количество акций.',
   storage: 'Не удалось сохранить операцию. Попробуйте ещё раз.',
   claimed: 'Бонус уже получен.',
+  unknown: 'Нет подтверждения. Проверьте статус исходной сделки.',
 } as const;
 
 interface TradeProps {
@@ -26,40 +28,70 @@ interface TradeProps {
   side: TradeSide;
   balance: number;
   held: number;
+  fees: FeeSettings;
+  unknownTradeId?: string;
+  unknownOperation?: Operation;
+  initialQuantity?: number;
+  onCheckTrade: (id: string) => Promise<OperationResult>;
   onClose: () => void;
-  onConfirm: (quantity: number, price: number, id: string) => Promise<OperationResult>;
+  onUnknownClose?: () => void;
+  onPendingChange?: (pending: boolean) => void;
+  onConfirm: (quantity: number, price: number, id: string, feeBps: number) => Promise<OperationResult>;
   onSuccess: (operation: Operation) => void;
 }
 
-export function TradeSheet({quote, side, balance, held, onClose, onConfirm, onSuccess}: TradeProps): ReactElement {
+export function TradeSheet({quote, side, balance, held, fees, unknownTradeId, unknownOperation, initialQuantity, onCheckTrade, onClose, onUnknownClose, onConfirm, onSuccess, onPendingChange}: TradeProps): ReactElement {
   const headingId = useId();
   const errorId = useId();
   const buying = side === 'buy';
   const limit = buying ? MAX_TRADE_QUANTITY : Math.min(held, MAX_TRADE_QUANTITY);
-  const [quantity, setQuantity] = useState(Math.min(START_QUANTITY, Math.max(1, limit)));
-  const [preview, setPreview] = useState<{price: number; balance: number; held: number}>();
+  const [quantity, setQuantity] = useState(Math.min(initialQuantity ?? START_QUANTITY, Math.max(1, limit)));
+  const [preview, setPreview] = useState<{price: number; balance: number; held: number; feeBps: number}>();
   const [error, setError] = useState('');
-  const job = useRef<{timer: number} | null>(null);
+  const [checking, setChecking] = useState(false);
+  const job = useRef<object | null>(null);
   const {price, balance: available, held: availableShares} = preview ?? {price: quote.price, balance, held};
-  const amount = quantity * price;
+  const feeBps = preview?.feeBps ?? (buying ? fees.buyBps : fees.sellBps);
+  const {gross, fee, total: amount} = tradePreview(side, quantity, price, feeBps);
   const shortfall = buying ? Math.max(0, amount - available) : 0;
-  const canSubmit = quantity >= 1 && quantity <= limit && shortfall === 0;
+  const invalidQuantity = !Number.isSafeInteger(quantity) || quantity < 1 || quantity > limit;
+  const canSubmit = !invalidQuantity && shortfall === 0 && !unknownTradeId;
   const busy = preview !== undefined;
+  const showingUnknown = Boolean(unknownTradeId) && (!busy || checking);
 
   useEffect(() => () => {
-    if (job.current) window.clearTimeout(job.current.timer);
     job.current = null;
-  }, []);
+    onPendingChange?.(false);
+  }, [onPendingChange]);
 
-  async function finish(id: string, request: {timer: number}): Promise<void> {
+  async function finish(id: string, request: object): Promise<void> {
     let result: OperationResult;
     try {
-      result = await onConfirm(quantity, price, id);
+      result = await onConfirm(quantity, price, id, feeBps);
     } catch {
       result = {ok: false, reason: 'storage'};
     }
     if (job.current !== request) return;
     job.current = null;
+    onPendingChange?.(false);
+    setPreview(undefined);
+    if (result.ok) onSuccess(result.operation);
+    else setError(result.reason === 'unknown' ? '' : errorMessages[result.reason]);
+  }
+
+  async function checkStatus(): Promise<void> {
+    if (!unknownTradeId || job.current) return;
+    const request = {};
+    job.current = request;
+    setError('');
+    setChecking(true);
+    setPreview({price, balance: available, held: availableShares, feeBps});
+    let result: OperationResult;
+    try { result = await onCheckTrade(unknownTradeId); }
+    catch { result = {ok: false, reason: 'storage'}; }
+    if (job.current !== request) return;
+    job.current = null;
+    setChecking(false);
     setPreview(undefined);
     if (result.ok) onSuccess(result.operation);
     else setError(errorMessages[result.reason]);
@@ -69,9 +101,11 @@ export function TradeSheet({quote, side, balance, held, onClose, onConfirm, onSu
     if (!canSubmit || job.current) return;
     const id = crypto.randomUUID();
     setError('');
-    setPreview({price, balance: available, held: availableShares});
-    const request = {timer: window.setTimeout(() => { void finish(id, request); }, SUBMIT_FEEDBACK_MS)};
+    setPreview({price, balance: available, held: availableShares, feeBps});
+    const request = {};
     job.current = request;
+    onPendingChange?.(true);
+    void finish(id, request);
   }
 
   function close(): void {
@@ -79,38 +113,57 @@ export function TradeSheet({quote, side, balance, held, onClose, onConfirm, onSu
   }
 
   return (
-    <Sheet headingId={headingId} topTitle={quote.name} closeDisabled={busy} onClose={close}>
+    <Sheet className={styles.screen ?? ''} headingId={headingId} topTitle={buying ? 'Покупка' : 'Продажа'} closeDisabled={busy} onClose={close}>
       <form className={styles.body} onSubmit={(event) => {
         event.preventDefault();
         confirm();
       }}>
-        <button className={styles.handle} type="button" aria-label="Закрыть форму сделки" disabled={busy} onClick={close}>
+        <SheetClose className={styles.handle} aria-label="Закрыть форму сделки">
           <span aria-hidden="true" />
-        </button>
-        <h2 id={headingId}>{buying ? 'Покупка акций' : 'Продажа акций'}</h2>
-        <p className={styles.caption}>{quote.name} · {quote.symbol}</p>
+        </SheetClose>
+        <h2 id={headingId}>{showingUnknown ? 'Проверяем операцию' : buying ? 'Покупка акций' : 'Продажа акций'}</h2>
+        <p className={styles.caption}>{showingUnknown ? 'Связь прервалась.' : `${quote.name} / ${quote.symbol}`}</p>
+        {showingUnknown ? <>
+          <Feedback title="Результат пока неизвестен" description="Не повторяйте покупку. Проверим статус того же запроса, чтобы не списать BC дважды." />
+          <dl className={styles.summary}>
+            <div><dt>Актив</dt><dd>{unknownOperation?.symbol}</dd></div>
+            <div><dt>Количество</dt><dd>{unknownOperation?.quantity} шт.</dd></div>
+            <div><dt>Итого</dt><dd>{money(unknownOperation?.amount ?? 0)}</dd></div>
+            <div><dt>Комиссия</dt><dd>{money(unknownOperation?.breakdown?.fee ?? 0)}</dd></div>
+          </dl>
+        </> : <>
         <QuantityInput
           value={quantity}
           max={Math.max(1, limit)}
           disabled={limit === 0 || busy}
-          {...(shortfall ? {errorId} : {})}
+          {...(shortfall || invalidQuantity ? {errorId} : {})}
           onChange={(value) => { setError(''); setQuantity(value); }}
         />
         <dl className={styles.summary}>
-          <div><dt>Цена одной акции</dt><dd>{formatBc(price)}</dd></div>
-          <div><dt>Итого</dt><dd className={shortfall ? styles.loss : undefined}>{formatBc(amount)}</dd></div>
-          <div><dt>Доступно</dt><dd>{buying ? formatBc(available) : `${availableShares} шт.`}</dd></div>
+          <div><dt>Цена акции</dt><dd>{money(price)}</dd></div>
+          <div><dt>Стоимость акций</dt><dd>{money(gross)}</dd></div>
+          <div><dt>Комиссия ({feeBps / 100}%)</dt><dd>{money(fee)}</dd></div>
+          <div><dt>{buying ? 'К списанию' : 'К зачислению'}</dt><dd className={shortfall ? styles.loss : undefined}>{money(amount)}</dd></div>
+          <div><dt>{buying ? 'Доступно' : 'Акций в портфеле'}</dt><dd>{buying ? money(available) : `${availableShares} шт.`}</dd></div>
         </dl>
+        </>}
         <div className={styles.feedback}>
-          {shortfall > 0 && <Feedback id={errorId} title={`Не хватает ${formatBc(shortfall)}`} description="Уменьшите количество акций" />}
+          {shortfall > 0 && <Feedback id={errorId} title={`Не хватает ${money(shortfall)}`} description="Уменьшите количество акций" />}
+          {!unknownTradeId && invalidQuantity && limit > 0 && <Feedback {...(shortfall ? {} : {id: errorId})} title={`Введите целое количество от 1 до ${limit}`} />}
           {limit === 0 && <Feedback title="У вас нет акций для продажи" />}
-          {error && <Feedback title={error} />}
+          {error && (error === errorMessages['price-changed']
+            ? <div className={styles.reprice} role="alert"><strong>Цена изменилась</strong><p>Старая котировка недействительна. Проверьте новый расчёт.</p></div>
+            : <Feedback title={error} />)}
+          {busy && <div className={styles.pending} role="status"><strong>Операция выполняется</strong><p>Не отправляйте запрос повторно. Ожидаем подтверждение.</p></div>}
         </div>
         <div className={styles.action}>
-          <Button busy={busy} disabled={!canSubmit} type="submit">
-            {busy ? (buying ? 'Покупаем…' : 'Продаём…') : `${buying ? 'Купить' : 'Продать'} ${shares(quantity)}`}
-          </Button>
-          <p>Только игровые средства.<br />Не реальные деньги.</p>
+          {showingUnknown ? <Button key="check" busy={busy} type="button" onClick={(event) => { event.preventDefault(); void checkStatus(); }}>Проверить статус</Button> :
+            <Button key="submit" busy={busy} disabled={!canSubmit} type="submit">
+              {busy ? (buying ? 'Покупаем…' : 'Продаём…') : shortfall ? 'Недостаточно средств' : error === errorMessages['price-changed'] ? 'Подтвердить новую цену' : `${buying ? 'Купить' : 'Продать'} ${shares(quantity)}`}
+            </Button>}
+          {!busy && (showingUnknown ? <Button variant="secondary" onClick={onUnknownClose}>Вернуться на биржу</Button> : shortfall ?
+            <Button variant="secondary" onClick={() => { setError(''); setQuantity(Math.max(1, quantity - 1)); }}>Уменьшить количество</Button> :
+            <SheetClose className={styles.cancel}>Отмена</SheetClose>)}
         </div>
       </form>
     </Sheet>

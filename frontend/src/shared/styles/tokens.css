@@ -59,6 +59,13 @@
   --botx-font-heading: 700 28px / 38px Inter, system-ui, sans-serif;
   --botx-page-inline: clamp(15px, 5.65vw, 22px);
   --botx-max-width: 430px;
+  --botx-motion-forward: 220ms;
+  --botx-motion-back: 180ms;
+  --botx-motion-tab: 120ms;
+  --botx-motion-pressed: 80ms;
+  --botx-motion-state: 160ms;
+  --botx-motion-sheet: 220ms;
+  --botx-motion-skeleton: 900ms;
 }
 
 @media (prefers-contrast: more) {

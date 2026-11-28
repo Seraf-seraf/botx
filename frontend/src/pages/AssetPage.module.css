@@ -5,6 +5,44 @@
   padding-block-end: var(--botx-safe-bottom);
 }
 
+.paused {
+  display: grid;
+  gap: var(--botx-space-12);
+  margin-block-start: -10px;
+}
+
+.paused h1 {
+  font: 700 28px / 38px Inter, system-ui, sans-serif;
+}
+
+.paused p {
+  color: var(--botx-muted);
+  font: var(--botx-font-caption);
+}
+
+.paused > div:first-child p {
+  margin-block-start: var(--botx-space-4);
+}
+
+.pausedNotice {
+  display: grid;
+  gap: var(--botx-space-4);
+  padding: var(--botx-space-12);
+  border: 1px solid var(--botx-border);
+  border-radius: var(--botx-radius-12);
+  background: var(--botx-surface);
+  font: var(--botx-font-caption);
+}
+
+.pausedNotice strong {
+  color: #ffc55b;
+  font: var(--botx-font-caption-bold);
+}
+
+.pausedNotice p {
+  font-size: 12px;
+}
+
 .identity {
   display: flex;
   align-items: center;

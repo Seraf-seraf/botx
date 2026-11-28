@@ -36,7 +36,7 @@ export function QuoteRow({
           <AssetIcon quote={quote} />
           <div className={styles.identity}>
             <span className={styles.name}>{quote.name}</span>
-            <span className={styles.caption}>{subtitle}</span>
+            <span className={styles.caption}>{subtitle}{quote.tradingStatus === 'paused' ? ' · Торги приостановлены' : quote.isNew ? ' · Новая' : ''}</span>
           </div>
         </div>
         {spark && <PriceChart variant="spark" tone={tone} points={historySince(quote.history, WEEK_MS)} />}

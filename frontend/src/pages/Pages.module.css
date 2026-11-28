@@ -95,11 +95,6 @@
   gap: var(--botx-space-16);
 }
 
-.balanceSummary .axisLabel {
-  border-block-start: 1px solid var(--botx-border);
-  padding-block-start: var(--botx-space-16);
-}
-
 .bonus {
   display: flex;
   align-items: center;
@@ -340,6 +335,58 @@
   color: var(--botx-on-accent);
   font: 600 16px / 22px Inter, system-ui, sans-serif;
   text-decoration: none;
+}
+
+.tradePortfolio {
+  display: grid;
+  align-content: start;
+  gap: var(--botx-space-12);
+}
+
+.tradePortfolio h1 {
+  margin-block-end: -8px;
+}
+
+.tradeBalance, .tradePosition {
+  display: grid;
+  gap: var(--botx-space-8);
+  border-radius: var(--botx-radius-10);
+  padding: var(--botx-space-12);
+}
+
+.tradePosition {
+  gap: var(--botx-space-12);
+}
+
+.tradeBalance {
+  min-block-size: 94px;
+}
+
+.tradeBalance strong {
+  font: var(--botx-font-heading);
+}
+
+.tradePosition h2 {
+  font: var(--botx-font-section);
+}
+
+.tradePosition dl {
+  display: grid;
+  gap: var(--botx-space-12);
+}
+
+.tradePosition dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--botx-space-8);
+  color: var(--botx-muted);
+  font: var(--botx-font-caption);
+}
+
+.tradePosition dd {
+  color: var(--botx-text);
+  text-align: end;
+  font: var(--botx-font-caption-bold);
 }
 
 .profileInfo {

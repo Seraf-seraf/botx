@@ -1,8 +1,7 @@
 import {memo, useId, useState} from 'react';
 import type {ReactElement} from 'react';
 import {useTelegram} from '../shared/telegram/useTelegram';
-import {Button} from '../shared/ui/Button';
-import {Sheet} from '../shared/ui/Sheet';
+import {Sheet, SheetClose} from '../shared/ui/Sheet';
 import {Card} from '../shared/ui/Card';
 import {Icon} from '../shared/ui/Icon';
 import styles from './Pages.module.css';
@@ -10,11 +9,11 @@ import styles from './Pages.module.css';
 const achievements = [
   {title: 'Первая акция', icon: 'star', text: 'Купите первую акцию на бирже BOTX.'},
   {title: 'Серия 7 дней', icon: 'medal', text: 'Получайте ежедневный бонус семь дней подряд.'},
-  {title: 'Рост портфеля', icon: 'trending-up', text: 'Стоимость ваших акций на деморынке меняется вместе с котировками.'},
+  {title: 'Рост портфеля', icon: 'trending-up', text: 'Стоимость ваших акций меняется вместе с котировками.'},
 ] as const;
 
 const menu = [
-  {title: 'Рейтинг игроков', icon: 'trophy', text: 'Рейтинг игроков недоступен в демоверсии.'},
+  {title: 'Рейтинг игроков', icon: 'trophy', text: 'Рейтинг пока пуст.'},
   {title: 'Как играть', icon: 'help-circle', text: 'Выберите бота на бирже и купите его акции за виртуальные BC. Портфель показывает ваши акции, а ежедневный бонус можно забрать в разделе «Баланс».'},
   {title: 'Настройки', icon: 'settings', text: 'Данные игры сохраняются на этом устройстве.'},
 ] as const;
@@ -81,7 +80,7 @@ export const ProfilePage = memo(function ProfilePage(): ReactElement {
           <div className={styles.profileInfo}>
             <h2 id={headingId}>{info.title}</h2>
             <p>{info.text}</p>
-            <Button onClick={() => setInfo(null)}>Закрыть</Button>
+            <SheetClose styled>Закрыть</SheetClose>
           </div>
         </Sheet>
       )}

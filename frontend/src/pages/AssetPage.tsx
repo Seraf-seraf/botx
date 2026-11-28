@@ -1,6 +1,6 @@
-import {useLayoutEffect, useRef, useState} from 'react';
+import {useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
 import type {ReactElement} from 'react';
-import {useLocation, useNavigate} from 'react-router-dom';
+import {useBlocker, useLocation, useNavigate} from 'react-router-dom';
 import {historySince, PriceChart} from '../features/market/PriceChart';
 import {TradeSheet} from '../features/trading/TradeSheet';
 import type {AppSnapshot, OperationResult, Quote, TradeOrder, TradeSide} from '../shared/data/contracts';
@@ -32,10 +32,18 @@ interface AssetProps {
   side?: TradeSide;
   onBack: () => void;
   onTrade: (side: TradeSide, order: TradeOrder) => Promise<OperationResult>;
+  onCheckTrade: (id: string) => Promise<OperationResult>;
 }
 
-export function AssetPage({quote, snapshot, side, onBack, onTrade}: AssetProps): ReactElement {
+export function AssetPage({quote, snapshot, side, onBack, onTrade, onCheckTrade}: AssetProps): ReactElement {
   const [range, setRange] = useState<Range>('week');
+  const pendingTrade = useRef(false);
+  const shouldBlock = useCallback((): boolean => pendingTrade.current, []);
+  const setTradePending = useCallback((pending: boolean): void => { pendingTrade.current = pending; }, []);
+  const blocker = useBlocker(shouldBlock);
+  useEffect(() => {
+    if (blocker.state === 'blocked') blocker.reset();
+  }, [blocker]);
   const previousSide = useRef(side);
   const buyButton = useRef<HTMLButtonElement>(null);
   const sellButton = useRef<HTMLButtonElement>(null);
@@ -63,13 +71,29 @@ export function AssetPage({quote, snapshot, side, onBack, onTrade}: AssetProps):
     void navigate(`/asset/${quote.symbol}/${next}`, {state: {from: 'asset'}});
   }
 
+  if (quote.tradingStatus === 'paused') {
+    return (
+      <article className={styles.paused}>
+        <div>
+          <h1>{quote.name}</h1>
+          <p>{quote.symbol} / рынок временно недоступен</p>
+        </div>
+        <div className={styles.pausedNotice} role="status">
+          <strong>Торги приостановлены</strong>
+          <p>Покупка и продажа недоступны. Уже принадлежащие вам акции и история сохранены.</p>
+        </div>
+        <Button onClick={() => void navigate('/', {replace: true})}>На биржу</Button>
+      </article>
+    );
+  }
+
   return (
     <article className={styles.asset}>
       <div className={styles.identity}>
         <span className={styles.icon}><Icon name={quote.icon} /></span>
         <div>
           <h1>{quote.name}</h1>
-          <p>{quote.symbol} · Игровой актив</p>
+          <p>{quote.symbol}</p>
         </div>
       </div>
       <div className={styles.price}>
@@ -102,7 +126,6 @@ export function AssetPage({quote, snapshot, side, onBack, onTrade}: AssetProps):
             <Button ref={buyButton} onClick={() => openTrade('buy')}>Купить</Button>
             <Button ref={sellButton} variant="secondary" onClick={() => openTrade('sell')}>Продать</Button>
           </div>
-          <p className={styles.disclaimer}>Виртуальный рынок · демо</p>
         </>
       )}
       {side && (
@@ -112,10 +135,17 @@ export function AssetPage({quote, snapshot, side, onBack, onTrade}: AssetProps):
           side={side}
           balance={snapshot.balance}
           held={held}
+          fees={snapshot.fees}
+          {...(side === 'buy' && snapshot.initialTradeQuantity ? {initialQuantity: snapshot.initialTradeQuantity} : {})}
+          {...(snapshot.unknownTradeId ? {unknownTradeId: snapshot.unknownTradeId} : {})}
+          {...(snapshot.unknownTrade ? {unknownOperation: snapshot.unknownTrade} : {})}
+          onCheckTrade={onCheckTrade}
+          onUnknownClose={() => void navigate('/', {replace: true})}
           onClose={onBack}
-          onConfirm={(quantity, price, id) => onTrade(side, {id, symbol: quote.symbol, quantity, unitPrice: price})}
+          onPendingChange={setTradePending}
+          onConfirm={(quantity, price, id, feeBps) => onTrade(side, {id, symbol: quote.symbol, quantity, unitPrice: price, feeBps})}
           onSuccess={(operation) => {
-            void navigate(`/asset/${quote.symbol}/receipt?id=${encodeURIComponent(operation.id)}`, {
+            void navigate(`/asset/${operation.symbol ?? quote.symbol}/receipt?id=${encodeURIComponent(operation.id)}`, {
               replace: true,
               state: {from: location.state?.from},
             });

@@ -60,6 +60,16 @@
   block-size: 12px;
   border-radius: var(--botx-radius-999);
   background: var(--botx-border);
+  animation: skeleton-pulse var(--botx-motion-skeleton) ease-in-out infinite;
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading i, .index i { animation: none; }
 }
 
 .index {

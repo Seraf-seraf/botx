@@ -1,9 +1,11 @@
-import type {AppSnapshot, Holding, Operation, Symbol} from './contracts';
+import {MAX_FEE_BPS} from './contracts';
+import type {AppSnapshot, FeeSettings, Holding, Operation, Symbol} from './contracts';
 
-export const STORAGE_KEY = 'botx.demo.v1';
-const STORAGE_VERSION = 1;
+export const STORAGE_KEY = 'botx.demo.v2';
+const LEGACY_STORAGE_KEY = 'botx.demo.v1';
+const STORAGE_VERSION = 2;
 const MAX_STORAGE_LENGTH = 1_000_000;
-const symbols: readonly Symbol[] = ['QST', 'DICE', 'MUSE', 'NEKO'];
+const symbols: readonly Symbol[] = ['QST', 'DICE', 'MUSE', 'NEKO', 'STUDY'];
 
 export interface Account {
   readonly revision: number;
@@ -11,6 +13,7 @@ export interface Account {
   readonly holdings: AppSnapshot['holdings'];
   readonly operations: AppSnapshot['operations'];
   readonly claimedOn: string | null;
+  readonly extras?: Readonly<Record<string, unknown>> & {readonly fees?: FeeSettings};
 }
 
 export type AccountStorage = Pick<Storage, 'getItem' | 'setItem'>;
@@ -33,14 +36,22 @@ function isSymbol(value: unknown): value is Symbol {
 
 function isOperation(value: unknown): value is Operation {
   if (!object(value) || typeof value.id !== 'string' || !value.id || value.id.length > 128 ||
-    !whole(value.date) || !Number.isFinite(new Date(value.date).getTime()) || !whole(value.amount, 1)) {
+    !whole(value.date) || !Number.isFinite(new Date(value.date).getTime()) || !whole(value.amount)) {
     return false;
   }
-  if (value.kind === 'bonus') return value.symbol === undefined && value.quantity === undefined;
+  if (value.kind === 'bonus') return whole(value.amount, 1) && value.symbol === undefined && value.quantity === undefined;
+  if (value.kind === 'payment') return whole(value.amount, 1) && value.symbol === undefined && value.quantity === undefined && value.breakdown === undefined;
+  if (value.breakdown !== undefined) {
+    const b = value.breakdown;
+    if (!object(b) || !whole(b.quantity, 1) || !whole(b.unitPrice, 1) || !whole(b.feeBps) || b.feeBps > MAX_FEE_BPS ||
+      !whole(b.gross) || !whole(b.fee) || !whole(b.total) || b.quantity !== value.quantity || b.total !== value.amount ||
+      b.gross !== b.quantity * b.unitPrice || b.fee !== Math.round(b.gross * b.feeBps / MAX_FEE_BPS) ||
+      b.total !== (value.kind === 'buy' ? b.gross + b.fee : b.gross - b.fee)) return false;
+  } else if (!whole(value.amount, 1)) return false;
   return (value.kind === 'buy' || value.kind === 'sell') && isSymbol(value.symbol) && whole(value.quantity, 1);
 }
 
-function parseAccount(raw: string | null): Account | undefined {
+function parseAccount(raw: string | null, version: number): Account | undefined {
   if (!raw || raw.length > MAX_STORAGE_LENGTH) return undefined;
   let value: unknown;
   try {
@@ -49,7 +60,7 @@ function parseAccount(raw: string | null): Account | undefined {
     return undefined;
   }
 
-  if (!object(value) || value.version !== STORAGE_VERSION || !whole(value.revision) || !whole(value.balance) ||
+  if (!object(value) || value.version !== version || !whole(value.revision) || !whole(value.balance) ||
     !object(value.holdings) || !Array.isArray(value.operations) ||
     !value.operations.every(isOperation) ||
     new Set(value.operations.map(({id}) => id)).size !== value.operations.length ||
@@ -64,15 +75,23 @@ function parseAccount(raw: string | null): Account | undefined {
     holdings[symbol] = {quantity: holding.quantity, cost: holding.cost};
   }
 
-  return {revision: value.revision, balance: value.balance, holdings, operations: value.operations, claimedOn: value.claimedOn};
+  return {revision: value.revision, balance: value.balance, holdings, operations: value.operations, claimedOn: value.claimedOn,
+    ...(object(value.extras) ? {extras: value.extras} : {})};
 }
 
 export function readAccount(storage: AccountStorage | undefined): Account | undefined {
-  return storage ? parseAccount(storage.getItem(STORAGE_KEY)) : undefined;
+  if (!storage) return undefined;
+  const current = storage.getItem(STORAGE_KEY);
+  if (current !== null) {
+    const account = parseAccount(current, STORAGE_VERSION);
+    if (!account) throw new Error('Invalid current account');
+    return account;
+  }
+  return parseAccount(storage.getItem(LEGACY_STORAGE_KEY), 1);
 }
 
 export function writeAccount(storage: AccountStorage | undefined, account: Account): void {
-  if (!storage) return;
+  if (!storage) throw new Error('BOTX account storage is unavailable');
   const raw = JSON.stringify({version: STORAGE_VERSION, ...account});
   if (raw.length > MAX_STORAGE_LENGTH) throw new Error('BOTX account storage is full');
   storage.setItem(STORAGE_KEY, raw);

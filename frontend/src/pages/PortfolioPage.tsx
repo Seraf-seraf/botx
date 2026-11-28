@@ -2,7 +2,7 @@ import {useState} from 'react';
 import type {ReactElement} from 'react';
 import {Link} from 'react-router-dom';
 import {historySince, PriceChart} from '../features/market/PriceChart';
-import type {AppSnapshot} from '../shared/data/contracts';
+import type {AppSnapshot, Quote} from '../shared/data/contracts';
 import {Badge} from '../shared/ui/Badge';
 import {Card} from '../shared/ui/Card';
 import {EmptyState} from '../shared/ui/EmptyState';
@@ -21,7 +21,7 @@ const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 type Segment = (typeof segments)[number]['value'];
 
-export function PortfolioPage({snapshot}: {snapshot: AppSnapshot}): ReactElement {
+export function PortfolioPage({snapshot, tradeQuote}: {snapshot: AppSnapshot; tradeQuote?: Quote}): ReactElement {
   const [segment, setSegment] = useState<Segment>('assets');
   const positions = snapshot.quotes.flatMap((quote) => {
     const holding = snapshot.holdings[quote.symbol];
@@ -37,6 +37,29 @@ export function PortfolioPage({snapshot}: {snapshot: AppSnapshot}): ReactElement
     price: positions.reduce((sum, {quote, holding}) => sum +
       (quote.history.at(index - prices.length)?.price ?? quote.price) * holding.quantity, 0),
   }));
+
+  if (tradeQuote) {
+    const quantity = snapshot.holdings[tradeQuote.symbol]?.quantity ?? 0;
+    const balance = formatBc(snapshot.balance).replace(/,(\d) BC$/, ',$10 BC');
+    return (
+      <div className={styles.tradePortfolio}>
+        <h1>Портфель</h1>
+        <Card className={styles.tradeBalance ?? ''}>
+          <p className={styles.caption}>Доступно</p>
+          <strong className={styles.total}>{balance}</strong>
+        </Card>
+        <Card className={styles.tradePosition ?? ''}>
+          <h2>{tradeQuote.name}</h2>
+          <dl>
+            <div><dt>Количество акций</dt><dd>{quantity} шт.</dd></div>
+            <div><dt>Цена акции</dt><dd>{formatBc(tradeQuote.price)}</dd></div>
+            <div><dt>Стоимость позиции</dt><dd>{formatBc(tradeQuote.price * quantity)}</dd></div>
+          </dl>
+        </Card>
+        <Link to="/" className={styles.emptyAction}>На биржу</Link>
+      </div>
+    );
+  }
 
   return (
     <div className={`${styles.page} ${positions.length ? '' : styles.emptyPortfolio}`}>
@@ -64,7 +87,7 @@ export function PortfolioPage({snapshot}: {snapshot: AppSnapshot}): ReactElement
       <section className={styles.section} aria-labelledby="portfolio-holdings">
         <h2 id="portfolio-holdings">Мои акции</h2>
         <FilterChips label="Портфель" options={segments} value={segment} onChange={setSegment} />
-        {segment === 'history' ? <OperationList operations={snapshot.operations.filter(({kind}) => kind !== 'bonus')} /> : (
+        {segment === 'history' ? <OperationList operations={snapshot.operations.filter(({kind}) => kind === 'buy' || kind === 'sell')} /> : (
             <>
               <p className={styles.tiny}>{pluralCount(positions.length, ['актив', 'актива', 'активов'])} · изменение цены за 7 дней</p>
               <ul className={styles.quoteList}>

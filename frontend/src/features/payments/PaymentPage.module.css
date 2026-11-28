@@ -1,0 +1,26 @@
+.page { display: grid; gap: var(--botx-space-12); align-content: start; }
+.page > * { animation: payment-state var(--botx-motion-state) ease-out; }
+.page[data-status='open'], .page[data-status='pending'], .page[data-status='unknown'], .page[data-status='expired'] { margin-block-start: -10px; }
+.page h1 { font: var(--botx-font-heading); }
+.page h2 { font: var(--botx-font-section); }
+.caption, .note, .resultCaption, .amount p { color: var(--botx-muted); font: var(--botx-font-caption); }
+.caption { margin-block-start: var(--botx-space-4); }
+.card { display: grid; gap: var(--botx-space-12); padding: var(--botx-space-12); }
+.card dl { display: grid; gap: var(--botx-space-12); font: var(--botx-font-caption); }
+.card dl div { display: grid; grid-template-columns: 60% 40%; }
+.card dt { color: var(--botx-muted); }
+.card dd { font: var(--botx-font-caption-bold); overflow-wrap: anywhere; }
+.note { display: grid; gap: var(--botx-space-4); padding: var(--botx-space-12); }
+.note strong { font: var(--botx-font-caption-bold); }
+.note p { letter-spacing: -0.1px; }
+.warning { color: #ffbf47; }
+.amount { display: grid; gap: var(--botx-space-12); padding: var(--botx-space-12); }
+.amount strong { font: var(--botx-font-heading); }
+.resultIcon { display: grid; place-items: center; justify-self: center; width: 64px; height: 64px; margin-block-start: 16px; border-radius: 24px; background: var(--botx-greenbg); color: var(--botx-text); }
+.neutral { background: var(--botx-surface2); }
+.resultCaption { font: var(--botx-font-body); margin-block-end: var(--botx-space-16); }
+.confirm { display: grid; gap: var(--botx-space-16); }
+.confirm h2 { font: var(--botx-font-section); }
+
+@keyframes payment-state { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .page > * { animation: none; } }
