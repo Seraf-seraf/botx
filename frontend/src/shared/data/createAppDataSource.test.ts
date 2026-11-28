@@ -1,10 +1,11 @@
 import {createElement} from 'react';
-import {render, screen} from '@testing-library/react';
+import {render, renderHook, screen} from '@testing-library/react';
 import {afterEach, describe, expect, it, vi} from 'vitest';
 import {App} from '../../app/App';
 import {createDemoFixtures} from './demo-fixtures';
 import type {AppDataSource} from './contracts';
 import {createAppDataSource} from './createAppDataSource';
+import {useAppSnapshot} from './useAppSnapshot';
 
 const ordinaryKey = 'botx.demo.v1';
 
@@ -17,6 +18,26 @@ afterEach(() => {
 });
 
 describe('scenario data source', () => {
+  it('preserves the receiver when invoking injected class-style source methods', async () => {
+    const delegate = createAppDataSource();
+    const source = new Proxy(delegate, {
+      get(target, property, receiver) {
+        if (property === 'payService' || property === 'cancelPayment' || property === 'checkPayment') {
+          return function(this: AppDataSource, ...args: unknown[]): unknown {
+            expect(this).toBe(source);
+            return Reflect.apply(Reflect.get(target, property), target, args);
+          };
+        }
+        return Reflect.get(target, property, receiver);
+      },
+    });
+    const {result, unmount} = renderHook(() => useAppSnapshot(source));
+    const {payService, checkPayment, cancelPayment} = result.current;
+    expect(await payService('study-bot', 'class-adapter', 10_050)).toMatchObject({ok: true});
+    expect(await checkPayment('class-adapter')).toMatchObject({ok: true});
+    expect(await cancelPayment('study-bot')).toEqual({ok: false, reason: 'invalid'});
+    unmount();
+  });
   it('rejects trades while localStorage is unavailable and can recover without losing the order', async () => {
     const getter = vi.spyOn(window, 'localStorage', 'get');
     getter.mockImplementation(() => { throw new Error('storage unavailable'); });

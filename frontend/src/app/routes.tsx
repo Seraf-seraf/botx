@@ -79,7 +79,7 @@ export function AppRoutes({source}: {source: AppDataSource}): ReactElement {
   const assetPage = asset && receipt
     ? <TradeReceipt operation={receipt} quote={asset} balance={snapshot.balance} held={snapshot.holdings[asset.symbol]?.quantity ?? 0} />
     : asset && (!side || tradeSide)
-      ? <AssetPage key={asset.symbol} quote={asset} snapshot={snapshot} {...(tradeSide && !paused ? {side: tradeSide} : {})} onBack={back} onTrade={trade} onCheckTrade={source.checkTrade} />
+      ? <AssetPage key={asset.symbol} quote={asset} snapshot={snapshot} {...(tradeSide && !paused ? {side: tradeSide} : {})} onBack={back} onTrade={trade} onCheckTrade={(id) => source.checkTrade(id)} />
       : <Navigate to="/" replace />;
 
   const title = receipt ? (receipt.kind === 'buy' ? 'Покупка' : 'Продажа') : tradeSide && !paused ? asset?.name : 'Акция';
